@@ -1,0 +1,9 @@
+[submodule "omega_converter/omega_format"]
+	path = omega_converter/omega_format
+	url = https://github.com/ika-rwth-aachen/omega_format.git
+[submodule "owl_augmentator"]
+	path = owl_augmentator
+	url = https://github.com/lu-w/owlready2-augmentator.git
+[submodule "auto/ontology"]
+	path = auto/ontology
+	url = https://github.com/lu-w/auto.git

@@ -1,0 +1,12 @@
+cython
+owlready2==0.36
+psutil
+rdflib
+shapely
+sympy
+matplotlib
+matplotlib-label-lines
+mpld3
+screeninfo
+numpy
+./owl_augmentator

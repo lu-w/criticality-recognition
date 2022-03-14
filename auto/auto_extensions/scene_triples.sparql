@@ -1,0 +1,11 @@
+PREFIX tm: <http://purl.org/auto/traffic_model#>
+
+SELECT ?e1
+       ?e2
+       ?e3
+WHERE
+  {
+    ?e1 tm:in_traffic_model ?s .
+    ?e2 tm:in_traffic_model ?s .
+    ?e3 tm:in_traffic_model ?s .
+  }
