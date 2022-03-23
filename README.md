@@ -8,7 +8,7 @@ We provide two use cases:
 
 ## Getting started
 
-First, pull the repository with all its submodules: `git pull --recurse-submodules`
+First, initialize all submodules: `git submodule update --init --recursive`.
 
 ### Install dependencies 
 
