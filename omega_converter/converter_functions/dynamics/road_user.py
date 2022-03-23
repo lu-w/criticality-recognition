@@ -8,6 +8,7 @@ def to_auto(cls, world: owlready2.World, scene, identifier=None):
 
     # Fetches ontologies
     ac = auto.get_ontology(auto.Ontology.Act, world)
+    pe = auto.get_ontology(auto.Ontology.Perception, world)
     ph = auto.get_ontology(auto.Ontology.Physics, world)
     geo = auto.get_ontology(auto.Ontology.GeoSPARQL, world)
     l4_core = auto.get_ontology(auto.Ontology.L4_Core, world)
@@ -22,6 +23,7 @@ def to_auto(cls, world: owlready2.World, scene, identifier=None):
         traffic_object = True
     else:
         ru = ac.Actor()
+        ru.is_a.append(pe.Observer)
         traffic_object = False
     scene.has_traffic_entity.append(ru)
     ru.in_scene.append(scene)

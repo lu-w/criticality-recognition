@@ -8,12 +8,22 @@ logger = logging.getLogger(__name__)
 
 class Criticality_Phenomenon:
 
-    def __init__(self, traffic_model, cp, cp_cls):
+    def __init__(self, traffic_model, cp, cp_cls, objects=None):
         """
-        Constructor for criticality phenomena.
+        Constructor for criticality phenomena. Information about criticality phenomena are stored as follows:
+        - traffic_model: The scene or scenario in which the CP occurs.
+        - cp: The CP individual from the ontology (owlready2 object).
+        - cp_cls: The class of the criticality phenomenon from the ontology (owlready2 class).
+        - time: Either an interval tuple (start, end) or a time point as float.
+        - subjects: A list of subjects (individuals within the ontology) of the CP.
+        - objects: A dictionary mapping object properties to lists of objects (individuals within the ontology), e.g.
+          {"prop1": [obj1, obj2], "prop2": [obj2, obj3]}.
         :param traffic_model: The scene or scenario in which the criticality phenomenon occurs.
         :param cp: An individual from the ABox that is a criticality phenomenon
         :param cp_cls: The class of the TBox of the criticality phenomenon (i.e. of cp)
+        :param objects: If the objects of the criticality phenomenon were already extracted previously, they can be
+        passed here as a dict, assigning each object property (str) a list of objects, e.g. {"prop1": [obj1, obj2],
+        "prop2": [obj2, obj3]}. If None is given, objects will be extracted in the constructor.
         """
         self.traffic_model = traffic_model
         self.cp = cp
@@ -39,7 +49,7 @@ class Criticality_Phenomenon:
         if len(self.cp_cls.label.en) > 0:
             self.predicate += " (" + self.cp_cls.label.en[0] + ")"
         # Objects
-        if len(self.cp_cls.object_extraction_code) > 0:
+        if objects is None and len(self.cp_cls.object_extraction_code) > 0:
             try:
                 local_dict = {"subject": self.cp, "objects": []}
                 exec(self.cp_cls.object_extraction_code[0], globals(), local_dict)
@@ -48,10 +58,10 @@ class Criticality_Phenomenon:
                 logger.error("Invalid object extraction code in OWL during CP extraction of: " + str(self.cp) + " (" +
                              str(self.cp_cls) + "): " + str(e))
                 self.objects = []
-        elif ac.Activity in self.cp.INDIRECT_is_a:
-            self.objects = self.cp.has_participant
+        elif objects is None and ac.Activity in self.cp.INDIRECT_is_a:
+            self.objects = {"participants": self.cp.has_participant}
         else:
-            self.objects = []
+            self.objects = objects or dict()
 
     def __str__(self) -> str:
         """
@@ -68,9 +78,10 @@ class Criticality_Phenomenon:
         # Predicate
         label += self.predicate
         # Objects
-        if len(self.objects) > 0:
-            obj_and_classes = get_most_specific_classes(self.objects)
-            label += " --> " + ", ".join([str(x[0]) + " (" + ", ".join(x[1]) + ")" for x in obj_and_classes])
+        for obj_predicate in self.objects.keys():
+            obj_and_classes = get_most_specific_classes(self.objects[obj_predicate])
+            label += " -- " + obj_predicate + " --> " + ", ".join([str(x[0]) + " (" + ", ".join(x[1]) + ")" for x in
+                                                                   obj_and_classes])
         return label
 
     def to_csv(self) -> str:
@@ -94,9 +105,10 @@ class Criticality_Phenomenon:
             csv_res += ", ".join([str(x[0]) + " (" + ", ".join(x[1]) + ")" for x in subj_and_classes])
         csv_res += ";"
         # Objects
-        if len(self.objects) > 0:
-            obj_and_classes = get_most_specific_classes(self.objects)
-            csv_res += ", ".join([str(x[0]) + " (" + ", ".join(x[1]) + ")" for x in obj_and_classes])
+        for obj_predicate in self.objects.keys():
+            obj_and_classes = get_most_specific_classes(self.objects[obj_predicate])
+            csv_res += obj_predicate + ": " + ", ".join([str(x[0]) + " (" + ", ".join(x[1]) + ")" for x in
+                                                         obj_and_classes])
         return csv_res
 
     def at_time(self):
@@ -114,7 +126,7 @@ class Criticality_Phenomenon:
         :return: True iff self is representable in scene.
         """
         if len(self.subjects) > 0:
-            for subj in self.subjects + self.objects:
+            for subj in self.subjects + [y for x in self.objects.values() for y in x]:
                 if scene not in subj.in_traffic_model:
                     return False
             return True
@@ -125,8 +137,8 @@ class Scene_Criticality_Phenomenon(Criticality_Phenomenon):
     """
     Concretization for scene-level criticality phenomena.
     """
-    def __init__(self, traffic_model, cp, cp_cls):
-        Criticality_Phenomenon.__init__(self, traffic_model, cp, cp_cls)
+    def __init__(self, traffic_model, cp, cp_cls, objects=None):
+        Criticality_Phenomenon.__init__(self, traffic_model, cp, cp_cls, objects)
         self.time = traffic_model.inTimePosition[0].numericPosition[0]
 
 
@@ -134,8 +146,8 @@ class Scenario_Criticality_Phenomenon(Criticality_Phenomenon):
     """
     Concretization for scenario-level criticality phenomena.
     """
-    def __init__(self, traffic_model, cp, cp_cls):
-        Criticality_Phenomenon.__init__(self, traffic_model, cp, cp_cls)
+    def __init__(self, traffic_model, cp, cp_cls, objects=None):
+        Criticality_Phenomenon.__init__(self, traffic_model, cp, cp_cls, objects)
         if hasattr(self.cp, "hasBeginning") and hasattr(self.cp, "hasEnd") and len(self.cp.hasBeginning) > 0 and \
                 len(self.cp.hasBeginning[0].inTimePosition) > 0 and \
                 len(self.cp.hasBeginning[0].inTimePosition[0].numericPosition) > 0 and len(self.cp.hasEnd) > 0 and \
@@ -181,14 +193,24 @@ def phenomena_scenario(scenario: list or owlready2.World) -> list:
                 most_specific_cp_clss = [cp_cls for cp_cls in cp_clss if hasattr(cp_cls, "__subclasses__") and
                                          len(set(cp_cls.__subclasses__()).intersection(set(cp_clss))) == 0]
                 for cp_cls in most_specific_cp_clss:
-                    if set(cp.INDIRECT_is_a).intersection({ac.Activity, ti.Interval}):
-                        scenario_cp_obj = Scenario_Criticality_Phenomenon(scenarios[0], cp, cp_cls)
-                        cps.append(scenario_cp_obj)
-                    elif len(cp.in_traffic_model) > 0 and tm.Scene in cp.in_traffic_model[0].INDIRECT_is_a:
-                        scene_cp_obj = Scene_Criticality_Phenomenon(cp.in_traffic_model[0], cp, cp_cls)
-                        cps.append(scene_cp_obj)
-                    else:
-                        raise ValueError("CP with no scene or scenario found: " + str(cp))
+                    objects = [None]
+                    if len(cp_cls.object_extraction_code) > 0:
+                        try:
+                            local_dict = {"subject": cp, "subjects": []}
+                            exec(cp_cls.object_extraction_code[0], globals(), local_dict)
+                            objects = local_dict["objects"] or []
+                        except Exception as e:
+                            logger.error("Invalid object extraction code in OWL during CP extraction of: " + str(cp) +
+                                         " (" + str(cp_cls) + "): " + str(e))
+                    for object_dict in objects:
+                        if set(cp.INDIRECT_is_a).intersection({ac.Activity, ti.Interval}):
+                            scenario_cp_obj = Scenario_Criticality_Phenomenon(scenarios[0], cp, cp_cls, object_dict)
+                            cps.append(scenario_cp_obj)
+                        elif len(cp.in_traffic_model) > 0 and tm.Scene in cp.in_traffic_model[0].INDIRECT_is_a:
+                            scene_cp_obj = Scene_Criticality_Phenomenon(cp.in_traffic_model[0], cp, cp_cls, object_dict)
+                            cps.append(scene_cp_obj)
+                        else:
+                            raise ValueError("CP with no scene or scenario found: " + str(cp))
         else:
             raise ValueError("No scenario found in scenario world " + str(scenario))
     else:

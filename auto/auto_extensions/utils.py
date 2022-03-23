@@ -1,3 +1,5 @@
+import math
+
 """
 Some common functionality for A.U.T.O. extensions, especially for checking domain constraints for augmentation.
 """
@@ -48,3 +50,68 @@ def is_valid_instant(x):
                len(x.inTimePosition[0].numericPosition) > 0
     except TypeError:
         return False
+
+
+def get_angle_between_yaw_and_point(a, p, yaw):
+    """
+    Gets the angle between the point p and the vector starting from a's centroid with the given yaw angle.
+    """
+    p_yaw = [math.cos(math.radians(yaw)), math.sin(math.radians(yaw))]
+    p_self = [p[0] - a.centroid.x, p[1] - a.centroid.y]
+    angle = math.degrees(math.atan2(*p_yaw) - math.atan2(*p_self)) % 360
+    return angle
+
+
+def left_front_point(a, yaw):
+    """
+    Gets the left front point of a's boundary (front-left determined through given yaw).
+    """
+    try:
+        for p in zip(a.boundary.xy[0], a.boundary.xy[1]):
+            angle = get_angle_between_yaw_and_point(a, p, yaw)
+            if 270 <= angle < 360:
+                return p
+    except NotImplementedError:
+        return a.centroid
+
+
+def right_front_point(a, yaw):
+    """
+    Gets the right front point of a's boundary (front-right determined through given yaw).
+    """
+    try:
+        for p in zip(a.boundary.xy[0], a.boundary.xy[1]):
+            angle = get_angle_between_yaw_and_point(a, p, yaw)
+            if 0 <= angle < 90:
+                return p
+    except NotImplementedError:
+        return a.centroid
+
+
+def left_back_point(a, yaw):
+    """
+    Gets the left back point of a's boundary (left-back determined through given yaw).
+    """
+    try:
+        for p in zip(a.boundary.xy[0], a.boundary.xy[1]):
+            angle = get_angle_between_yaw_and_point(a, p, yaw)
+            if 180 <= angle < 270:
+                return p
+    except NotImplementedError:
+        print(a)
+        import code
+        code.interact(local=locals())
+        return a.centroid
+
+
+def right_back_point(a, yaw):
+    """
+    Gets the right back point of a's boundary (left-back determined through given yaw).
+    """
+    try:
+        for p in zip(a.boundary.xy[0], a.boundary.xy[1]):
+            angle = get_angle_between_yaw_and_point(a, p, yaw)
+            if 90 <= angle < 180:
+                return p
+    except NotImplementedError:
+        return a.centroid

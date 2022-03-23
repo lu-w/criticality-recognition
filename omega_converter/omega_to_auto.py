@@ -44,7 +44,7 @@ def _add_identity_information(instance_tuples):
     """
     Adds the identity relation that tracks same objects over multiple scenes based on the information returned by the
     `to_auto` functions.
-    :param instance_tuples:A list of tuples with the first entry being a OMEGA object, the second one begin a list of
+    :param instance_tuples: A list of tuples with the first entry being a OMEGA object, the second one begin a list of
     corresponding OWL individuals representing the first entry. Each time iteration, the same list sorting of the second
     entry is expected.
     """
@@ -55,6 +55,31 @@ def _add_identity_information(instance_tuples):
             except AttributeError:
                 pass
         setattr(rr_inst, "last_owl_instance", owl_inst)
+
+
+def _get_speed_limit(rr: omega_format.ReferenceRecording) -> int or None:
+    """
+    Returns the speed limit in the given reference recording or None if the speed limit can not be determined.
+    Determination works via a simple lookup of known locations and speed limits.
+    :param rr: The reference recording
+    """
+    if math.isclose(rr.meta_data.reference_point_lat, 50.78563844942432) and \
+            math.isclose(rr.meta_data.reference_point_lon, 6.128973907195158):
+        # Charlottenburger Allee - Neuköllner Str. (Location 4)
+        return 50
+    elif math.isclose(rr.meta_data.reference_point_lat, 50.779082542457765) and \
+            math.isclose(rr.meta_data.reference_point_lon, 6.164784245039574):
+        # Von-Coels-Str. - Heckstr. (Location 3)
+        return 50
+    elif math.isclose(rr.meta_data.reference_point_lat, 50.768629564172194) and \
+            math.isclose(rr.meta_data.reference_point_lon, 6.101500261218432):
+        # Bismarckstr. - Schlossstr. (Location 2)
+        return 30
+    elif math.isclose(rr.meta_data.reference_point_lat, 50.78232943792871) and \
+            math.isclose(rr.meta_data.reference_point_lon, 6.070376552691796):
+        # Süsterfeldstr. - Kühlwetterstr. (Location 1)
+        return 50
+    return None
 
 
 def _to_auto(rr: omega_format.ReferenceRecording, world: owlready2.World, scene_number=None):
@@ -69,6 +94,8 @@ def _to_auto(rr: omega_format.ReferenceRecording, world: owlready2.World, scene_
     # Creates and populates scene for every time point
     scenes = []
 
+    speed_limit = _get_speed_limit(rr)
+
     for s, t in enumerate(rr.timestamps.val):
         if s == scene_number:
             logger.debug("Scene " + str(s + 1) + "/" + str(len(rr.timestamps.val)))
@@ -81,6 +108,7 @@ def _to_auto(rr: omega_format.ReferenceRecording, world: owlready2.World, scene_
             scene = auto.get_ontology(auto.Ontology.Traffic_Model, world).Scene()
             scene.inTimePosition.append(time)
             scene.inTimePosition.append(sequence)
+            scene.has_speed_limit = speed_limit
             if len(scenes) > 0:
                 scene.after = [scenes[-1]]
 

@@ -73,6 +73,7 @@ def get_fuc23_worlds():
     time_1 = ti_1.TimePosition()
     time_1.numericPosition = [0]
     scene_1.inTimePosition.append(time_1)
+    scene_1.has_speed_limit = 30
 
     # Create traffic infrastructure
     # Western road
@@ -144,7 +145,7 @@ def get_fuc23_worlds():
     pedestrian_crossing_1.hasGeometry = [pedestrian_crossing_geometry_1]
     pedestrian_crossing_1.is_persistent = True
     # Logical lane & road connections
-    road_west_1.has_lane = [western_lower_lane_1, eastern_upper_lane_1, pedestrian_crossing_1]
+    road_west_1.has_lane = [western_lower_lane_1, western_upper_lane_1, pedestrian_crossing_1]
     road_east_1.has_lane = [eastern_lower_lane_1, eastern_upper_lane_1]
     road_south_1.has_lane = [southern_left_lane_1, southern_right_lane_1, bicycle_lane_1]
     western_lower_lane_1.has_successor_lane = [eastern_lower_lane_1, southern_left_lane_1]
@@ -178,7 +179,7 @@ def get_fuc23_worlds():
     ego_driver_t0 = l4_core_1.Automated_Driving_Function()
     ego_driver_t0.identifier = "Ego-ADF"
     ego_driver_t0.has_horizontal_field_of_view = 3.14
-    ego_driver_t0.has_visibility_range = 200
+    ego_driver_t0.has_visibility_range = 20
     ego_driver_t0_geometry = ge_1.Geometry()
     ego_driver_t0_geometry.asWKT = [geometry.Point([6.5, 22]).wkt]
     ego_driver_t0.hasGeometry = [ego_driver_t0_geometry]
@@ -189,7 +190,7 @@ def get_fuc23_worlds():
     bicycle_t0.identifier = "Bicycle"
     bicycle_t0.has_height = 1.5
     bicycle_t0.has_velocity_x = 0
-    bicycle_t0.has_velocity_y = 6
+    bicycle_t0.has_velocity_y = 5
     bicycle_t0.has_velocity_z = 0
     bicycle_t0.has_acceleration_x = 0
     bicycle_t0.has_acceleration_y = 0
@@ -202,7 +203,7 @@ def get_fuc23_worlds():
     bicyclist_t0 = l4_de_1.Bicyclist()
     bicyclist_t0.identifier = "Bicyclist"
     bicyclist_t0.has_horizontal_field_of_view = 3.14
-    bicyclist_t0.has_visibility_range = 200
+    bicyclist_t0.has_visibility_range = 20
     bicyclist_t0_geometry = ge_1.Geometry()
     bicyclist_t0_geometry.asWKT = [geometry.Point([40.9, 11.3]).wkt]
     bicyclist_t0.hasGeometry = [bicyclist_t0_geometry]
@@ -256,6 +257,7 @@ def get_fuc23_worlds():
     time_2 = ti_2.TimePosition()
     time_2.numericPosition = [1]
     scene_2.inTimePosition.append(time_2)
+    scene_2.has_speed_limit = 30
 
     # Create traffic infrastructure
     # Western road
@@ -327,7 +329,7 @@ def get_fuc23_worlds():
     pedestrian_crossing_2.hasGeometry = [pedestrian_crossing_geometry_2]
     pedestrian_crossing_2.is_persistent = True
     # Logical lane & road connections
-    road_west_2.has_lane = [western_lower_lane_2, eastern_upper_lane_2, pedestrian_crossing_2]
+    road_west_2.has_lane = [western_lower_lane_2, western_upper_lane_2, pedestrian_crossing_2]
     road_east_2.has_lane = [eastern_lower_lane_2, eastern_upper_lane_2]
     road_south_2.has_lane = [southern_left_lane_2, southern_right_lane_2, bicycle_lane_2]
     western_lower_lane_2.has_successor_lane = [eastern_lower_lane_2, southern_left_lane_2]
@@ -362,7 +364,7 @@ def get_fuc23_worlds():
     ego_driver_t1 = l4_core_2.Automated_Driving_Function()
     ego_driver_t1.identifier = "Ego-ADF"
     ego_driver_t1.has_horizontal_field_of_view = 3.14
-    ego_driver_t1.has_visibility_range = 200
+    ego_driver_t1.has_visibility_range = 20
     ego_driver_t1_geometry = ge_2.Geometry()
     ego_driver_t1_geometry.asWKT = [geometry.Point([25.5, 23]).wkt]
     ego_driver_t1.hasGeometry = [ego_driver_t1_geometry]
@@ -374,7 +376,7 @@ def get_fuc23_worlds():
     bicycle_t1.identifier = "Bicycle"
     bicycle_t1.has_height = 1.5
     bicycle_t1.has_velocity_x = 0
-    bicycle_t1.has_velocity_y = 6
+    bicycle_t1.has_velocity_y = 5
     bicycle_t1.has_velocity_z = 0
     bicycle_t1.has_acceleration_x = 0
     bicycle_t1.has_acceleration_y = 0
@@ -387,7 +389,7 @@ def get_fuc23_worlds():
     bicyclist_t1 = l4_de_2.Bicyclist()
     bicyclist_t1.identifier = "Bicyclist"
     bicyclist_t1.has_horizontal_field_of_view = 3.14
-    bicyclist_t1.has_visibility_range = 200
+    bicyclist_t1.has_visibility_range = 20
     bicyclist_t1_geometry = ge_2.Geometry()
     bicyclist_t1_geometry.asWKT = [geometry.Point([41.3, 17.1]).wkt]
     bicyclist_t1.hasGeometry = [bicyclist_t1_geometry]
@@ -444,6 +446,7 @@ def get_fuc23_worlds():
     time_3 = ti_3.TimePosition()
     time_3.numericPosition = [2]
     scene_3.inTimePosition.append(time_3)
+    scene_3.has_speed_limit = 30
 
     # Create traffic infrastructure
     # Western road
@@ -515,7 +518,7 @@ def get_fuc23_worlds():
     pedestrian_crossing_3.hasGeometry = [pedestrian_crossing_geometry_3]
     pedestrian_crossing_3.is_persistent = True
     # Logical lane & road connections
-    road_west_3.has_lane = [western_lower_lane_3, eastern_upper_lane_3, pedestrian_crossing_3]
+    road_west_3.has_lane = [western_lower_lane_3, western_upper_lane_3, pedestrian_crossing_3]
     road_east_3.has_lane = [eastern_lower_lane_3, eastern_upper_lane_3]
     road_south_3.has_lane = [southern_left_lane_3, southern_right_lane_3, bicycle_lane_3]
     western_lower_lane_3.has_successor_lane = [eastern_lower_lane_3, southern_left_lane_3]
@@ -536,7 +539,7 @@ def get_fuc23_worlds():
     ego_t2 = l4_de_3.Passenger_Car()
     ego_t2.identifier = "Ego"
     ego_t2.has_height = 2
-    ego_t2.has_velocity_x = 1
+    ego_t2.has_velocity_x = 1.5
     ego_t2.has_velocity_y = 0
     ego_t2.has_velocity_z = 0
     ego_t2.has_acceleration_x = -5
@@ -551,7 +554,7 @@ def get_fuc23_worlds():
     ego_driver_t2 = l4_core_3.Automated_Driving_Function()
     ego_driver_t2.identifier = "Ego-ADF"
     ego_driver_t2.has_horizontal_field_of_view = 3
-    ego_driver_t2.has_visibility_range = 100
+    ego_driver_t2.has_visibility_range = 20
     ego_driver_t2_geometry = ge_3.Geometry()
     ego_driver_t2_geometry.asWKT = [geometry.Point([36, 23.5]).wkt]
     ego_driver_t2.hasGeometry = [ego_driver_t2_geometry]
@@ -563,7 +566,7 @@ def get_fuc23_worlds():
     bicycle_t2.identifier = "Bicycle"
     bicycle_t2.has_height = 1.5
     bicycle_t2.has_velocity_x = 0
-    bicycle_t2.has_velocity_y = 5
+    bicycle_t2.has_velocity_y = 4
     bicycle_t2.has_velocity_z = 0
     bicycle_t2.has_acceleration_x = 0
     bicycle_t2.has_acceleration_y = -0.5
@@ -577,7 +580,7 @@ def get_fuc23_worlds():
     bicyclist_t2 = l4_de_3.Bicyclist()
     bicyclist_t2.identifier = "Bicyclist"
     bicyclist_t2.has_horizontal_field_of_view = 3
-    bicyclist_t2.has_visibility_range = 100
+    bicyclist_t2.has_visibility_range = 20
     bicyclist_t2_geometry = ge_3.Geometry()
     bicyclist_t2_geometry.asWKT = [geometry.Point([41.2, 22.6]).wkt]
     bicyclist_t2.hasGeometry = [bicyclist_t2_geometry]

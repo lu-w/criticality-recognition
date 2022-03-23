@@ -147,7 +147,7 @@ def _reason(world: owlready2.World, aug_undos=None, pellet_output=False) -> list
     l4de = auto.get_ontology(auto.Ontology.L4_DE, world)
 
     # Register loaded ontologies to augmentations
-    perception.register(physics=ph, perception=pe)
+    perception.register(perception=pe)
     physics.register(physics=ph)
     time.register(time=ti)
     l1_core.register(l1_core=l1core, l4_core=l4core, l4_de=l4de)
@@ -161,7 +161,7 @@ def _reason(world: owlready2.World, aug_undos=None, pellet_output=False) -> list
 
     # Run reasoner & perform augmentation
     augmentation = True
-    c = 1
+    c = 0
     single_scene = len(world.search(type=tm.Scenario)) == 0
 
     while augmentation:
@@ -175,7 +175,7 @@ def _reason(world: owlready2.World, aug_undos=None, pellet_output=False) -> list
         if not pellet_output:
             sys.stderr = open(os.devnull, "w")
             sys.stdout = open(os.devnull, "w")
-        owlready2.sync_reasoner_pellet(world, infer_property_values=True)  # set debug=2 for explanation
+        owlready2.sync_reasoner_pellet(world, infer_property_values=True)  # set debug=2 for explanation if inconsistent
         if not pellet_output:
             sys.stdout = sys.__stdout__
             sys.stderr = sys.__stderr__

@@ -8,13 +8,13 @@ from sympy import geometry
 from shapely import wkt
 from shapely.geometry import Point, Polygon, LineString
 
-# TODO make this threshold speed dependent and not an absolute distance
-_INTERSECTING_PATH_THRESHOLD = 10  # s, the time interval in which future intersecting paths shall be detected
+_INTERSECTING_PATH_THRESHOLD = 5   # s, the time interval in which future intersecting paths shall be detected
 _SPATIAL_PREDICATE_THRESHOLD = 50  # m, the distance in which spatial predicates are augmented
 _IS_NEAR_DISTANCE = 2              # m, the distance for which spatial objects are close to each other
 _IS_IN_PROXIMITY_DISTANCE = 15     # m, the distance for which spatial objects are in proximity to each other
-# TODO maybe this threshold can be chosen based on situation (e.g. bicyclist vs vehicle, crossing vs. parallel, ...)
 _HIGH_REL_SPEED_THRESHOLD = 0.25   # rel., the relative difference in total speed in which CP 150 will be augmented
+_DEFAULT_SPEED_LIMIT = 50          # km/h, the default speed limit that is assumed
+_DEFAULT_MAX_SPEED = 50            # km/h, the default speed maximum speed that is assumed
 
 
 def _lies_within_spatial_predicate_threshold(geo_self, geo_other):
@@ -23,6 +23,7 @@ def _lies_within_spatial_predicate_threshold(geo_self, geo_other):
 
 def register(physics: owlready2.Ontology):
     with physics:
+
         @augment_class
         class Dynamical_Object(owlready2.Thing):
             @augment(AugmentationType.REIFIED_DATA_PROPERTY, physics.Has_Distance_To, "distance_from", "distance_to",
@@ -62,7 +63,7 @@ def register(physics: owlready2.Ontology):
         class Moving_Dynamical_Object(owlready2.Thing):
             @augment(AugmentationType.OBJECT_PROPERTY, "has_intersecting_path")
             def augment_has_intersecting_path(self, other: physics.Moving_Dynamical_Object):
-                # TODO document in OWL (one entity needs 10s or less to predicted intersection point @ const. v)
+                # TODO document in OWL
                 if same_scene(self, other) and has_geometry(self) and has_geometry(other) and self.has_yaw is not None \
                         and other.has_yaw is not None and self.has_speed is not None and other.has_speed is not None:
                     p_1 = wkt.loads(self.hasGeometry[0].asWKT[0]).centroid
@@ -82,27 +83,24 @@ def register(physics: owlready2.Ontology):
                         else:
                             return False
 
-            @augment(AugmentationType.OBJECT_PROPERTY, "CP_150")
-            def augment_cp_150(self, other: physics.Moving_Dynamical_Object):
-                # Small distance
-                if self != other and same_scene(self, other) and has_geometry(self) and has_geometry(other):
-                    # TODO document in OWL
-                    p_self = wkt.loads(self.hasGeometry[0].asWKT[0]).centroid
-                    p_other = wkt.loads(other.hasGeometry[0].asWKT[0]).centroid
-                    # TODO find a better approximation than a simple circle here (use Kamm's circle?)
-                    reachable_space = p_self.buffer(1.5 * self.has_speed)
-                    return reachable_space.intersects(p_other)
-
             @augment(AugmentationType.OBJECT_PROPERTY, "CP_163")
             def augment_cp_163(self, other: physics.Moving_Dynamical_Object):
                 # High relative speed
                 if self != other and same_scene(self, other) and has_geometry(self) and has_geometry(other):
-                    # TODO document in OWL (it is intentionally asymmetrical)
+                    # TODO document in OWL
                     v_self = numpy.array([self.has_velocity_x, self.has_velocity_y])
                     v_other = numpy.array([other.has_velocity_x, other.has_velocity_y])
-                    v_rel = v_self - v_other
-                    s_rel = numpy.linalg.norm(v_rel)
-                    s_rel_normed = s_rel / numpy.linalg.norm(v_other)
+                    s_rel = numpy.linalg.norm(v_self - v_other)
+                    s_self_max = max([x for y in self.is_a for x in y.has_maximum_speed])
+                    if s_self_max is not None:
+                        s_self_max = _DEFAULT_MAX_SPEED
+                    if self.has_speed_limit is not None:
+                        s_rule_max = self.has_speed_limit
+                    elif len(self.in_traffic_model) > 0 and self.in_traffic_model[0].has_speed_limit is not None:
+                        s_rule_max = self.in_traffic_model[0].has_speed_limit
+                    else:
+                        s_rule_max = _DEFAULT_SPEED_LIMIT
+                    s_rel_normed = s_rel / (min(s_self_max, s_rule_max))
                     return s_rel_normed >= _HIGH_REL_SPEED_THRESHOLD
 
         @augment_class

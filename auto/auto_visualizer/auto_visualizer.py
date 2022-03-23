@@ -269,6 +269,7 @@ def visualize_scenario(scenario, cps=None):
         centroids_y = []
         cp_subj_centroids_x = []
         cp_subj_centroids_y = []
+        entity_points = dict()
         for entity in scene.has_traffic_entity:
             if len(entity.hasGeometry) > 0:
                 for geo in entity.hasGeometry:
@@ -291,6 +292,7 @@ def visualize_scenario(scenario, cps=None):
                         else:
                             x = shape.centroid.x
                             y = shape.centroid.y
+                        entity_points[entity] = (x, y)
                         centroids_x.append(x)
                         centroids_y.append(y)
                         plt.plot(*points, alpha=.6)
@@ -317,56 +319,66 @@ def visualize_scenario(scenario, cps=None):
                         already_drawn_cps = []
                         # init dict
                         for cp in entity_scene_cps:
-                            relations_per_cp_class[cp.predicate] = []
+                            if cp.predicate not in relations_per_cp_class.keys():
+                                relations_per_cp_class[cp.predicate] = []
                         for cp in entity_scene_cps:
                             if cp not in already_drawn_cps:
-                                same_line_cps = [x for x in entity_scene_cps if x.objects == cp.objects]
+                                same_line_cps = [x for x in entity_scene_cps if
+                                                 [y for z in x.objects.values() for y in z] ==
+                                                 [y for z in cp.objects.values() for y in z]]
                                 labels = [(x.predicate.split("(")[0],
                                            (x.predicate.split("(")[1].replace(")", ""), str(x)))
                                           for x in same_line_cps]
                                 already_drawn_cps += same_line_cps
                                 subj_x = x
                                 subj_y = y
-                                for obj in cp.objects:
-                                    if len(obj.hasGeometry) > 0:
-                                        geom_o = wkt.loads(obj.hasGeometry[0].asWKT[0])
-                                        line = plt.plot((subj_x, geom_o.centroid.x), (subj_y, geom_o.centroid.y),
-                                                        linestyle="-", color=cp_colors[cp_color], label=cp.predicate,
-                                                        linewidth=2)[0]
-                                        m = (geom_o.centroid.y - subj_y) / (geom_o.centroid.x - subj_x)
-                                        b = subj_y - m * subj_x
-                                        if subj_x > geom_o.centroid.x:
-                                            x_off = 0.4
-                                        else:
-                                            x_off = -0.4
-                                        arr_x = geom_o.centroid.x + x_off
-                                        arr_y = m * arr_x + b
-                                        tip = plt.arrow(arr_x, arr_y, dx=-x_off, dy=-(arr_y - geom_o.centroid.y),
-                                                        color=cp_colors[cp_color], shape="full",
-                                                        length_includes_head=True, head_width=0.2)
-                                        if len(labels[0]) > 1:
-                                            label_row = " ".join([label[0] for label in labels])
-                                        else:
-                                            label_row = labels[0]
-                                        x_offset = (len(label_row) * 0.055) / 2 - 0.055
-                                        if subj_x > geom_o.centroid.x:
-                                            label_x = geom_o.centroid.x + abs(subj_x - geom_o.centroid.x) / 2 - x_offset
-                                        else:
-                                            label_x = geom_o.centroid.x - abs(subj_x - geom_o.centroid.x) / 2 - x_offset
-                                        a = math.degrees(np.arctan(m))
-                                        for l_i, label in enumerate(labels):
-                                            label_y = m * label_x + b + 0.05
-                                            annot = plt.annotate(label[0].replace("CP_", ""), (label_x, label_y),
-                                                                 color=cp_colors[cp_color], rotation=a, fontsize=4,
-                                                                 rotation_mode="anchor")
-                                            label_x += len(label[0]) * 0.055 + 0.1
-                                            entity_cp_relations.append(annot)
-                                            cps_relations.append(annot)
-                                            relations_per_cp_class[same_line_cps[l_i].predicate] += [annot, line, tip]
-                                            cps_for_tooltips.append(same_line_cps[l_i])
-                                        subj_x = geom_o.centroid.x
-                                        subj_y = geom_o.centroid.y
-                                        entity_cp_relations += [line, tip]
+                                for objs in cp.objects.values():
+                                    for obj in objs:
+                                        if len(obj.hasGeometry) > 0:
+                                            if obj in entity_points.keys():
+                                                obj_x = entity_points[obj][0]
+                                                obj_y = entity_points[obj][1]
+                                            else:
+                                                geom_o = wkt.loads(obj.hasGeometry[0].asWKT[0])
+                                                obj_x = geom_o.centroid.x
+                                                obj_y = geom_o.centroid.y
+                                            line = plt.plot((subj_x, obj_x), (subj_y, obj_y),
+                                                            linestyle="-", color=cp_colors[cp_color], label=cp.predicate,
+                                                            linewidth=2)[0]
+                                            m = (obj_y - subj_y) / (obj_x - subj_x)
+                                            b = subj_y - m * subj_x
+                                            if subj_x > obj_x:
+                                                x_off = 0.4
+                                            else:
+                                                x_off = -0.4
+                                            arr_x = obj_x + x_off
+                                            arr_y = m * arr_x + b
+                                            tip = plt.arrow(arr_x, arr_y, dx=-x_off, dy=-(arr_y - obj_y),
+                                                            color=cp_colors[cp_color], shape="full",
+                                                            length_includes_head=True, head_width=0.2)
+                                            if len(labels[0]) > 1:
+                                                label_row = " ".join([label[0] for label in labels])
+                                            else:
+                                                label_row = labels[0]
+                                            x_offset = (len(label_row) * 0.055) / 2 - 0.055
+                                            if subj_x > obj_x:
+                                                label_x = obj_x + abs(subj_x - obj_x) / 2 - x_offset
+                                            else:
+                                                label_x = obj_x - abs(subj_x - obj_x) / 2 - x_offset
+                                            a = math.degrees(np.arctan(m))
+                                            for l_i, label in enumerate(labels):
+                                                label_y = m * label_x + b + 0.05
+                                                annot = plt.annotate(label[0].replace("CP_", ""), (label_x, label_y),
+                                                                     color=cp_colors[cp_color], rotation=a, fontsize=4,
+                                                                     rotation_mode="anchor")
+                                                label_x += len(label[0]) * 0.055 + 0.1
+                                                entity_cp_relations.append(annot)
+                                                cps_relations.append(annot)
+                                                relations_per_cp_class[same_line_cps[l_i].predicate] += [annot, line, tip]
+                                                cps_for_tooltips.append(same_line_cps[l_i])
+                                            subj_x = obj_x
+                                            subj_y = obj_y
+                                            entity_cp_relations += [line, tip]
                                 cp_color = (cp_color + 1) % len(cp_colors)
                         entity_relations.append(entity_cp_relations)
             elif len(set([str(y) for y in entity.is_a]).intersection(_NO_PRINTING_CLASSES)) == 0:
@@ -592,8 +604,12 @@ def _describe_cp(cp):
     label += str(cp.predicate)
     label += "</td></tr><tr><td>Object(s)</td><td>"
     if len(cp.objects) > 0:
-        obj_and_classes = phenomena_extraction.get_most_specific_classes(cp.objects)
-        label += "<br />".join([str(x[0]) + " (" + ", ".join(x[1]) + ")" for x in obj_and_classes])
+        for obj_predicate in cp.objects.keys():
+            obj_and_classes = phenomena_extraction.get_most_specific_classes(cp.objects[obj_predicate])
+            label += obj_predicate + ":<br/>" + "<br />".join([str(x[0]) + " (" + ", ".join(x[1]) + ")" for x in
+                                                               obj_and_classes])
+            if len(cp.objects.keys()) > 1:
+                label += "<br/>"
     label += "</td></tr>"
     label += "</tbody></table>"
     return label
