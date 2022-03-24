@@ -8,7 +8,7 @@ from sympy import geometry
 from shapely import wkt
 from shapely.geometry import Point, Polygon, LineString
 
-_INTERSECTING_PATH_THRESHOLD = 3   # s, the time interval in which future intersecting paths shall be detected
+_INTERSECTING_PATH_THRESHOLD = 6   # s, the time interval in which future intersecting paths shall be detected
 _SPATIAL_PREDICATE_THRESHOLD = 50  # m, the distance in which spatial predicates are augmented
 _IS_NEAR_DISTANCE = 2              # m, the distance for which spatial objects are close to each other
 _IS_IN_PROXIMITY_DISTANCE = 15     # m, the distance for which spatial objects are in proximity to each other
@@ -73,7 +73,7 @@ def register(physics: owlready2.Ontology):
                             d_other = geometry.Point.distance(p_cross[0], p_other)
                             t_self = float(d_self) / self.has_speed
                             t_other = float(d_other) / other.has_speed
-                            return t_self < _INTERSECTING_PATH_THRESHOLD or t_other < _INTERSECTING_PATH_THRESHOLD
+                            return t_self + t_other < _INTERSECTING_PATH_THRESHOLD
                         else:
                             return False
 
