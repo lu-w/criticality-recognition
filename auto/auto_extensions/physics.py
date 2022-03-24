@@ -8,7 +8,7 @@ from sympy import geometry
 from shapely import wkt
 from shapely.geometry import Point, Polygon, LineString
 
-_INTERSECTING_PATH_THRESHOLD = 5   # s, the time interval in which future intersecting paths shall be detected
+_INTERSECTING_PATH_THRESHOLD = 3   # s, the time interval in which future intersecting paths shall be detected
 _SPATIAL_PREDICATE_THRESHOLD = 50  # m, the distance in which spatial predicates are augmented
 _IS_NEAR_DISTANCE = 2              # m, the distance for which spatial objects are close to each other
 _IS_IN_PROXIMITY_DISTANCE = 15     # m, the distance for which spatial objects are in proximity to each other
@@ -40,11 +40,8 @@ def register(physics: owlready2.Ontology):
             def augment_speed(self):
                 v = [x for x in [self.has_velocity_x, self.has_velocity_y, self.has_velocity_z] if x is not None]
                 if len(v) > 1:
-                    sign = 1
-                    if self.has_yaw is not None:
-                        if numpy.dot((math.cos(math.radians(self.has_yaw)), math.sin(math.radians(self.has_yaw))),
-                                     v[:2]) < 0:
-                            sign = -1
+                    angle = math.degrees(math.atan2(v[1], v[0])) % 360
+                    sign = (angle <= 90) or (angle >= 270)
                     return float(sign * numpy.linalg.norm(v))
 
             @augment(AugmentationType.DATA_PROPERTY, "has_acceleration")
@@ -52,11 +49,8 @@ def register(physics: owlready2.Ontology):
                 a = [x for x in [self.has_acceleration_x, self.has_acceleration_y, self.has_acceleration_z] if
                      x is not None]
                 if len(a) > 1:
-                    sign = 1
-                    if self.has_yaw is not None:
-                        if numpy.dot((math.cos(math.radians(self.has_yaw)), math.sin(math.radians(self.has_yaw))),
-                                     a[:2]) < 0:
-                            sign = -1
+                    angle = math.degrees(math.atan2(a[1], a[0])) % 360
+                    sign = (angle <= 90) or (angle >= 270)
                     return float(sign * numpy.linalg.norm(a))
 
         @augment_class
@@ -86,10 +80,15 @@ def register(physics: owlready2.Ontology):
             @augment(AugmentationType.OBJECT_PROPERTY, "CP_163")
             def augment_cp_163(self, other: physics.Moving_Dynamical_Object):
                 # High relative speed
-                if self != other and same_scene(self, other) and has_geometry(self) and has_geometry(other):
+                if self != other and same_scene(self, other) and has_geometry(self) and has_geometry(other) and \
+                        self.has_yaw is not None and other.has_yaw is not None and self.has_velocity_x is not None and \
+                        self.has_velocity_y is not None and other.has_velocity_x is not None and other.has_velocity_x \
+                        is not None:
                     # TODO document in OWL
-                    v_self = numpy.array([self.has_velocity_x, self.has_velocity_y])
-                    v_other = numpy.array([other.has_velocity_x, other.has_velocity_y])
+                    v_self = numpy.array(
+                        convert_local_to_global_vector([self.has_velocity_x, self.has_velocity_y], self.has_yaw))
+                    v_other = numpy.array(
+                        convert_local_to_global_vector([other.has_velocity_x, other.has_velocity_y], other.has_yaw))
                     s_rel = numpy.linalg.norm(v_self - v_other)
                     s_self_max = max([x for y in self.is_a for x in y.has_maximum_speed])
                     if s_self_max is not None:

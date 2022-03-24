@@ -29,7 +29,7 @@ from criticality_recognition import phenomena_extraction
 ####################
 
 # Classes to not show in visualization
-_NO_PRINTING_CLASSES = {"physics.Has_Distance_To", "perception.Is_Full_Occlusion"}
+_NO_PRINTING_CLASSES = {"physics.Has_Distance_To", "perception.Is_Full_Occlusion", "perception.Is_Occlusion"}
 # Data/object properties to hide from the individual tables shown when hovering
 _NO_PRINTING_PROPERTIES = {"perceptional_property", "traffic_related_concept_property",
                            "descriptive_traffic_entity_property", "traffic_entity_property", "activity_property",

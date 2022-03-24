@@ -115,3 +115,12 @@ def right_back_point(a, yaw):
                 return p
     except NotImplementedError:
         return a.centroid
+
+
+def convert_local_to_global_vector(v: list, yaw: float):
+    """
+    Converts the given vector in vehicle coordinate system to the global one under the given vehicle yaw.
+    """
+    vx = math.cos(math.radians(yaw)) * v[0] - math.sin(math.radians(yaw)) * v[1]
+    vy = math.sin(math.radians(yaw)) * v[0] + math.cos(math.radians(yaw)) * v[1]
+    return [vx, vy]

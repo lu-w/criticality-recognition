@@ -189,8 +189,8 @@ def get_fuc23_worlds():
     bicycle_t0 = l4_de_1.Bicycle()
     bicycle_t0.identifier = "Bicycle"
     bicycle_t0.has_height = 1.5
-    bicycle_t0.has_velocity_x = 0
-    bicycle_t0.has_velocity_y = 5
+    bicycle_t0.has_velocity_x = 5
+    bicycle_t0.has_velocity_y = 0
     bicycle_t0.has_velocity_z = 0
     bicycle_t0.has_acceleration_x = 0
     bicycle_t0.has_acceleration_y = 0
@@ -375,8 +375,8 @@ def get_fuc23_worlds():
     bicycle_t1 = l4_de_2.Bicycle()
     bicycle_t1.identifier = "Bicycle"
     bicycle_t1.has_height = 1.5
-    bicycle_t1.has_velocity_x = 0
-    bicycle_t1.has_velocity_y = 5
+    bicycle_t1.has_velocity_x = 5
+    bicycle_t1.has_velocity_y = 0
     bicycle_t1.has_velocity_z = 0
     bicycle_t1.has_acceleration_x = 0
     bicycle_t1.has_acceleration_y = 0
@@ -565,11 +565,11 @@ def get_fuc23_worlds():
     bicycle_t2 = l4_de_3.Bicycle()
     bicycle_t2.identifier = "Bicycle"
     bicycle_t2.has_height = 1.5
-    bicycle_t2.has_velocity_x = 0
-    bicycle_t2.has_velocity_y = 4
+    bicycle_t2.has_velocity_x = 4
+    bicycle_t2.has_velocity_y = 0
     bicycle_t2.has_velocity_z = 0
-    bicycle_t2.has_acceleration_x = 0
-    bicycle_t2.has_acceleration_y = -0.5
+    bicycle_t2.has_acceleration_x = -0.5
+    bicycle_t2.has_acceleration_y = 0
     bicycle_t2.has_acceleration_z = 0
     bicycle_t2.has_yaw = 90
     bicycle_t2_geometry = ge_3.Geometry()

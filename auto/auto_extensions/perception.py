@@ -105,10 +105,10 @@ def register(perception: owlready2.Ontology):
                                                            other_geom.within(self_geom) or
                                                            other_geom.equals(self_geom)))
 
-            @augment(AugmentationType.CLASS_SUBSUMPTION, perception.Is_Full_Occlusion)
-            def augment_full_occlusion(self):
+            @augment(AugmentationType.CLASS_SUBSUMPTION, None)  # This is a bit hacky, but is more performant
+            def augment_occlusion(self):
                 if has_geometry(self) and (self.has_yaw is not None or (len(self.drives) > 0 and self.drives[0].has_yaw
-                                           is not None)):
+                                           is not None)) and len(self.is_occluded_for_in_occlusion) == 0:
                     if self.has_yaw is None:
                         yaw = self.drives[0].has_yaw
                     else:
@@ -134,7 +134,7 @@ def register(perception: owlready2.Ontology):
                     occlusions = get_occlusions(occluded_others, occluded_areas, fov)
                     for occ in occlusions:
                         if occ[2] > 0.2:
-                            # only create occlusion object if more than 20 perc. occluded to avoid 'spam'
+                            # only create occlusion object if more than 20 perc. occluded to avoid 'spamming' the A-Box
                             ont_occ = perception.Is_Occlusion()
                             ont_occ.is_occluded_for = [self]
                             ont_occ.is_occluded_by = occ[0]
@@ -165,4 +165,3 @@ def register(perception: owlready2.Ontology):
                                 plt.plot(*a.xy, color="b")
                         plt.axis('scaled')
                         plt.show()
-                    return True
