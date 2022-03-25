@@ -15,6 +15,7 @@ import screeninfo
 import tempfile
 import webbrowser
 import owlready2
+from shapely import geometry
 import numpy as np
 import auto.auto
 
@@ -269,6 +270,7 @@ def visualize_scenario(scenario, cps=None):
         centroids_y = []
         cp_subj_centroids_x = []
         cp_subj_centroids_y = []
+        plotted_labels = []
         entity_points = dict()
         for entity in scene.has_traffic_entity:
             if len(entity.hasGeometry) > 0:
@@ -342,20 +344,14 @@ def visualize_scenario(scenario, cps=None):
                                                 geom_o = wkt.loads(obj.hasGeometry[0].asWKT[0])
                                                 obj_x = geom_o.centroid.x
                                                 obj_y = geom_o.centroid.y
-                                            line = plt.plot((subj_x, obj_x), (subj_y, obj_y),
-                                                            linestyle="-", color=cp_colors[cp_color], label=cp.predicate,
-                                                            linewidth=2)[0]
                                             m = (obj_y - subj_y) / (obj_x - subj_x)
                                             b = subj_y - m * subj_x
-                                            if subj_x > obj_x:
-                                                x_off = 0.4
-                                            else:
-                                                x_off = -0.4
-                                            arr_x = obj_x + x_off
-                                            arr_y = m * arr_x + b
-                                            tip = plt.arrow(arr_x, arr_y, dx=-x_off, dy=-(arr_y - obj_y),
-                                                            color=cp_colors[cp_color], shape="full",
-                                                            length_includes_head=True, head_width=0.2)
+                                            head_width = 0.2
+                                            head_length = 1.5 * head_width
+                                            arrow = plt.arrow(subj_x, subj_y, dx=(obj_x - subj_x), dy=(obj_y - subj_y),
+                                                              color=cp_colors[cp_color], shape="full",
+                                                              length_includes_head=True, head_width=head_width,
+                                                              head_length=head_length)
                                             if len(labels[0]) > 1:
                                                 label_row = " ".join([label[0] for label in labels])
                                             else:
@@ -365,20 +361,37 @@ def visualize_scenario(scenario, cps=None):
                                                 label_x = obj_x + abs(subj_x - obj_x) / 2 - x_offset
                                             else:
                                                 label_x = obj_x - abs(subj_x - obj_x) / 2 - x_offset
-                                            a = math.degrees(np.arctan(m))
+                                            a = math.degrees(math.atan(m))
                                             for l_i, label in enumerate(labels):
-                                                label_y = m * label_x + b + 0.05
-                                                annot = plt.annotate(label[0].replace("CP_", ""), (label_x, label_y),
-                                                                     color=cp_colors[cp_color], rotation=a, fontsize=4,
-                                                                     rotation_mode="anchor")
-                                                label_x += len(label[0]) * 0.055 + 0.1
+                                                label_string = label[0].replace("CP_", "")
+                                                label_len = (len(label_string) * 0.09 + 0.1)
+                                                label_x_offset = abs(math.cos(math.atan(m)) * label_len)
+                                                while True:
+                                                    # Finds a free space to plot label
+                                                    label_y = m * label_x + b + 0.05
+                                                    label_x_1 = label_x - label_x_offset / 2
+                                                    label_y_1 = m * label_x_1 + b
+                                                    label_x_2 = label_x + label_x_offset / 2
+                                                    label_y_2 = m * label_x_2 + b
+                                                    label_line1 = geometry.LineString([(label_x_1, label_y_1),
+                                                                                        (label_x_2, label_y_2)])
+                                                    label_line2 = label_line1.union(label_line1.parallel_offset(-0.1))
+                                                    new_bb = label_line2.convex_hull
+                                                    if not _has_collision_with_bbs(plotted_labels, new_bb):
+                                                        break
+                                                    label_x += label_x_offset / 10
+                                                annot = plt.annotate(label_string,
+                                                                     (label_x, label_y), color=cp_colors[cp_color],
+                                                                     rotation=a, fontsize=4, rotation_mode="anchor")
                                                 entity_cp_relations.append(annot)
                                                 cps_relations.append(annot)
-                                                relations_per_cp_class[same_line_cps[l_i].predicate] += [annot, line, tip]
+                                                relations_per_cp_class[same_line_cps[l_i].predicate] += [annot, arrow]
                                                 cps_for_tooltips.append(same_line_cps[l_i])
+                                                plotted_labels.append(new_bb)
+                                                label_x += label_x_offset
                                             subj_x = obj_x
                                             subj_y = obj_y
-                                            entity_cp_relations += [line, tip]
+                                            entity_cp_relations += [arrow]
                                 cp_color = (cp_color + 1) % len(cp_colors)
                         entity_relations.append(entity_cp_relations)
             elif len(set([str(y) for y in entity.is_a]).intersection(_NO_PRINTING_CLASSES)) == 0:
@@ -793,3 +806,10 @@ class CPTooltip(mpld3.plugins.PluginBase):
         self.dict_ = {"type": "cpstooltip",
                       "id": mpld3.utils.get_id(text),
                       "tooltip_html": tooltip_html}
+
+
+def _has_collision_with_bbs(existing_bbs, new_bb):
+    """
+    Checks if the new rectangle (new_bb) collides with some existing rectangles.
+    """
+    return len([x for x in existing_bbs if new_bb.intersects(x)]) > 0
