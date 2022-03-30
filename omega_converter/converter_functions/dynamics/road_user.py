@@ -22,7 +22,7 @@ def to_auto(cls, world: owlready2.World, scene, identifier=None):
         ru = l4_core.Traffic_Object()
         traffic_object = True
     else:
-        ru = ac.Actor()
+        ru = l4_core.Human()
         ru.is_a.append(pe.Observer)
         traffic_object = False
     scene.has_traffic_entity.append(ru)
@@ -158,6 +158,9 @@ def to_auto(cls, world: owlready2.World, scene, identifier=None):
             light.is_a.append(ph.Active_Lamp)
         phys_repr.has_part.append(light)
     ru.identifier = identifier
+    # TODO debug, remove
+    if len(ru.drives) > 0 and len(ru.drives[0].hasGeometry) == 0:
+        raise ValueError("Found RU that drives smth but the vehicle has no geom: " + str(ru) + " - " + str(ru.drives))
     # Map RR instance to one or two OWL individuals
     if phys_repr is ru:
         return [(cls, [ru])]

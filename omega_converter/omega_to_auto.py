@@ -224,7 +224,7 @@ def convert(omega_file="inD.hdf5", onto_path="auto/ontology", cp=False) -> list:
     """
     worlds = []
     snippets = list(filter(lambda x: (x.timestamps.val[-1] - x.timestamps.val[0]) <= MAX_SCENARIO_DURATION,
-                           _load_hdf5(omega_file).extract_snippets()))
+                           _load_hdf5(omega_file).extract_snippets()))[:1]  # TODO debug, remove
     for i, rr in enumerate(snippets):
         logger.debug("Creating OWL world for snippet " + str(i + 1) + "/" + str(len(snippets)) + " (" +
                      str(str(rr.timestamps.val[0])) + "s - " + str(str(rr.timestamps.val[-1])) + "s)")

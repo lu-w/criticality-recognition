@@ -8,9 +8,10 @@ from sympy import geometry
 from shapely import wkt
 from shapely.geometry import Point, Polygon, LineString
 
-_INTERSECTING_PATH_THRESHOLD = 6   # s, the time interval in which future intersecting paths shall be detected
+_INTERSECTING_PATH_THRESHOLD = 8   # s, the time interval in which future intersecting paths shall be detected
+_INTERSECTING_PATH_MAX_PET = 3     # s, the time interval in which future intersecting paths shall be detected
 _SPATIAL_PREDICATE_THRESHOLD = 50  # m, the distance in which spatial predicates are augmented
-_IS_NEAR_DISTANCE = 2              # m, the distance for which spatial objects are close to each other
+_IS_NEAR_DISTANCE = 4              # m, the distance for which spatial objects are close to each other
 _IS_IN_PROXIMITY_DISTANCE = 15     # m, the distance for which spatial objects are in proximity to each other
 _HIGH_REL_SPEED_THRESHOLD = 0.25   # rel., the relative difference in total speed in which CP 150 will be augmented
 _DEFAULT_SPEED_LIMIT = 50          # km/h, the default speed limit that is assumed
@@ -41,7 +42,9 @@ def register(physics: owlready2.Ontology):
                 v = [x for x in [self.has_velocity_x, self.has_velocity_y, self.has_velocity_z] if x is not None]
                 if len(v) > 1:
                     angle = math.degrees(math.atan2(v[1], v[0])) % 360
-                    sign = (angle <= 90) or (angle >= 270)
+                    sign = 1
+                    if 90 < angle < 270:
+                        sign = -1
                     return float(sign * numpy.linalg.norm(v))
 
             @augment(AugmentationType.DATA_PROPERTY, "has_acceleration")
@@ -50,7 +53,9 @@ def register(physics: owlready2.Ontology):
                      x is not None]
                 if len(a) > 1:
                     angle = math.degrees(math.atan2(a[1], a[0])) % 360
-                    sign = (angle <= 90) or (angle >= 270)
+                    sign = 1
+                    if 90 < angle < 270:
+                        sign = -1
                     return float(sign * numpy.linalg.norm(a))
 
         @augment_class
@@ -59,21 +64,32 @@ def register(physics: owlready2.Ontology):
             def augment_has_intersecting_path(self, other: physics.Moving_Dynamical_Object):
                 # TODO document in OWL
                 if same_scene(self, other) and has_geometry(self) and has_geometry(other) and self.has_yaw is not None \
-                        and other.has_yaw is not None and self.has_speed is not None and other.has_speed is not None:
+                        and other.has_yaw is not None and self.has_speed and other.has_speed:
                     p_1 = wkt.loads(self.hasGeometry[0].asWKT[0]).centroid
                     p_2 = wkt.loads(other.hasGeometry[0].asWKT[0]).centroid
                     p_self = geometry.Point(p_1.x, p_1.y)
                     p_other = geometry.Point(p_2.x, p_2.y)
                     if p_self != p_other:
-                        self_path = geometry.Ray(p_self, angle=math.radians(self.has_yaw))
-                        other_path = geometry.Ray(p_other, angle=math.radians(other.has_yaw))
+                        self_yaw = self.has_yaw
+                        other_yaw = other.has_yaw
+                        if self.has_speed < 0:
+                            self_yaw = (self.has_yaw + 180) % 360
+                        if other.has_speed < 0:
+                            other_yaw = (other.has_yaw + 180) % 360
+                        p_self_1 = geometry.Point(p_1.x + math.cos(math.radians(self_yaw)),
+                                                  p_1.y + math.sin(math.radians(self_yaw)))
+                        p_other_1 = geometry.Point(p_2.x + math.cos(math.radians(other_yaw)),
+                                                   p_2.y + math.sin(math.radians(other_yaw)))
+                        self_path = geometry.Ray(p_self, p_self_1)
+                        other_path = geometry.Ray(p_other, p_other_1)
                         p_cross = geometry.intersection(self_path, other_path)
                         if len(p_cross) > 0:
                             d_self = geometry.Point.distance(p_cross[0], p_self)
                             d_other = geometry.Point.distance(p_cross[0], p_other)
                             t_self = float(d_self) / self.has_speed
                             t_other = float(d_other) / other.has_speed
-                            return t_self + t_other < _INTERSECTING_PATH_THRESHOLD
+                            return t_self + t_other < _INTERSECTING_PATH_THRESHOLD and \
+                                   abs(t_self - t_other) < _INTERSECTING_PATH_MAX_PET
                         else:
                             return False
 

@@ -108,7 +108,8 @@ def register(perception: owlready2.Ontology):
             @augment(AugmentationType.CLASS_SUBSUMPTION, None)  # This is a bit hacky, but is more performant
             def augment_occlusion(self):
                 if has_geometry(self) and (self.has_yaw is not None or (len(self.drives) > 0 and self.drives[0].has_yaw
-                                           is not None)) and len(self.is_occluded_for_in_occlusion) == 0:
+                                           is not None and has_geometry(self.drives[0]))) and \
+                        len(self.is_occluded_for_in_occlusion) == 0:
                     if self.has_yaw is None:
                         yaw = self.drives[0].has_yaw
                     else:

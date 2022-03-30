@@ -1,9 +1,12 @@
 import logging
 import owlready2
+import tqdm
 
 import auto.auto
 
 logger = logging.getLogger(__name__)
+
+_CACHED_CP_CLASSES = dict()
 
 
 class Criticality_Phenomenon:
@@ -135,11 +138,13 @@ class Criticality_Phenomenon:
 
 class Scene_Criticality_Phenomenon(Criticality_Phenomenon):
     """
-    Concretization for scene-level criticality phenomena.
+    Concretization for scene-level criticality phenomena. Note that member traffic_model is a list of scenes.
     """
-    def __init__(self, traffic_model, cp, cp_cls, objects=None):
+    def __init__(self, traffic_model: list, cp, cp_cls, objects=None):
+        if len(traffic_model) == 0:
+            raise ValueError("Scene CP with scenes")
         Criticality_Phenomenon.__init__(self, traffic_model, cp, cp_cls, objects)
-        self.time = traffic_model.inTimePosition[0].numericPosition[0]
+        self.time = traffic_model[0].inTimePosition[0].numericPosition[0]
 
 
 class Scenario_Criticality_Phenomenon(Criticality_Phenomenon):
@@ -186,7 +191,8 @@ def phenomena_scenario(scenario: list or owlready2.World) -> list:
         cp_ont = auto.auto.get_ontology(auto.auto.Ontology.Criticality_Phenomena, scenario)
         scenarios = list(scenario.search(type=tm.Scenario))
         if len(scenarios) > 0:
-            for cp in scenario.search(type=cp_ont.Criticality_Phenomenon):
+            search_space = tqdm.tqdm(list(scenario.search(type=cp_ont.Criticality_Phenomenon)))
+            for cp in search_space:
                 cp_clss = list(filter(lambda x: x in scenario.classes(),
                                       [y for y in cp.INDIRECT_is_a if hasattr(y, "namespace") and y.namespace.base_iri
                                        == "http://purl.org/auto/criticality_phenomena#"]))
@@ -207,7 +213,7 @@ def phenomena_scenario(scenario: list or owlready2.World) -> list:
                             scenario_cp_obj = Scenario_Criticality_Phenomenon(scenarios[0], cp, cp_cls, object_dict)
                             cps.append(scenario_cp_obj)
                         elif len(cp.in_traffic_model) > 0 and tm.Scene in cp.in_traffic_model[0].INDIRECT_is_a:
-                            scene_cp_obj = Scene_Criticality_Phenomenon(cp.in_traffic_model[0], cp, cp_cls, object_dict)
+                            scene_cp_obj = Scene_Criticality_Phenomenon(cp.in_traffic_model, cp, cp_cls, object_dict)
                             cps.append(scene_cp_obj)
                         else:
                             raise ValueError("CP with no scene or scenario found: " + str(cp))
@@ -266,7 +272,22 @@ def list_cps(cps: list, output_format="natural", world=None, print_non_visualiza
     return output[:-1]
 
 
-def get_most_specific_classes(list_of_individuals):
+def _get_individual_id(individual) -> str:
+    """
+    Returns a unique identifier as string for the given individual.
+    :param individual: The individual to get the ID for.
+    :return: A string representing the ID.
+    """
+    if hasattr(individual, "identifier") and (isinstance(individual.identifier, list) and
+                                              len(individual.identifier) > 0 and
+                                              type(individual.identifier[0]) in [int, str]) or (
+            type(individual.identifier) in [int, str]):
+        return str(individual.identifier[0])
+    else:
+        return str(individual)
+
+
+def get_most_specific_classes(list_of_individuals, caching=True):
     """
     Helper function that looks up the subsumption hierarchy and returns the most specific classes of a list of
     individuals(i.e. removes all classes that are a parent of some class of the individuals). It looks only at the
@@ -276,6 +297,14 @@ def get_most_specific_classes(list_of_individuals):
     second entry (as strings)
     """
     res = []
+    noncached_list_of_individuals = []
+    if caching:
+        for i in list_of_individuals:
+            if i in _CACHED_CP_CLASSES.keys():
+                i_id = _get_individual_id(i)
+                res.append((i_id, _CACHED_CP_CLASSES[i]))
+            else:
+                noncached_list_of_individuals.append(i)
     relevant_iris = [auto.auto.Ontology.L1_Core.value, auto.auto.Ontology.L2_Core.value,
                      auto.auto.Ontology.L3_Core.value, auto.auto.Ontology.L4_Core.value,
                      auto.auto.Ontology.L5_Core.value, auto.auto.Ontology.L6_Core.value, auto.auto.Ontology.L1_DE.value,
@@ -283,7 +312,7 @@ def get_most_specific_classes(list_of_individuals):
                      auto.auto.Ontology.L5_DE.value, auto.auto.Ontology.L6_DE.value]
     relevant_additional_iris = [auto.auto.Ontology.Perception.value, auto.auto.Ontology.Physics.value,
                                 auto.auto.Ontology.Act.value]
-    for individual in list_of_individuals:
+    for individual in noncached_list_of_individuals:
         relevant_classes = [x for x in individual.namespace.ontology.classes() if x.namespace.base_iri in relevant_iris]
         relevant_additional_classes = [x for x in individual.namespace.ontology.classes() if x.namespace.base_iri in
                                        relevant_additional_iris]
@@ -291,16 +320,12 @@ def get_most_specific_classes(list_of_individuals):
         if len(individual_clss) == 0:
             # Retry finding something outside of domain ontologies, e.g. physics
             individual_clss = list(filter(lambda x: x in relevant_additional_classes, individual.INDIRECT_is_a))
-        if hasattr(individual, "identifier") and (isinstance(individual.identifier, list) and
-                                                  len(individual.identifier) > 0 and
-                                                  type(individual.identifier[0]) in [int, str]) or (
-                type(individual.identifier) in [int, str]):
-            individual_id = str(individual.identifier[0])
-        else:
-            individual_id = str(individual)
+        individual_id = _get_individual_id(individual)
         most_specific_individual_clss = [str(individual_cls) for individual_cls in individual_clss if
                                          hasattr(individual_cls, "__subclasses__") and len(
                                              set(individual_cls.__subclasses__()).intersection(set(individual_clss)))
                                          == 0]
         res.append((individual_id, most_specific_individual_clss))
+        if caching:
+            _CACHED_CP_CLASSES[individual] = most_specific_individual_clss
     return res

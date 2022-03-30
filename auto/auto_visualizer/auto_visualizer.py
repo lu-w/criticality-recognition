@@ -17,6 +17,9 @@ import webbrowser
 import owlready2
 from shapely import geometry
 import numpy as np
+from tqdm import tqdm
+import time as pytime
+
 import auto.auto
 
 from criticality_recognition import phenomena_extraction
@@ -43,6 +46,7 @@ _NO_PRINTING_PROPERTIES = {"perceptional_property", "traffic_related_concept_pro
                            "ehDisjoint"}
 # If one hides long property lists, this is the number after which the list is cut off
 _MAX_PROPS_DISPLAY = 4
+_AVOID_LABEL_COLLISIONS = False
 
 # Logging
 logger = logging.getLogger(__name__)
@@ -248,17 +252,20 @@ def visualize_scenario(scenario, cps=None):
 
     # Create HTML for each scene
     for i, scene in enumerate(scenes):
+        logger.info("Plotting scene " + str(i + 1) + " / " + str(len(scenes)))
         scene_cps = [cp for cp in cps if cp.is_representable_in_scene(scene)]
         cp_colors = list(map(get_color, range(len([x for c in scene_cps for x in c.subjects]))))
         cp_color = 0
         no_geo_entities = []
-        primary_screens = list(filter(lambda x: x.is_primary, screeninfo.get_monitors()))
-        if len(primary_screens) > 0:
-            width = (primary_screens[0].width_mm / 25.4) * 0.73
-            height = (primary_screens[0].height_mm / 25.4) * 0.73
-        else:
-            width = 24.5
-            height = 10
+        width = 24.5
+        height = 10
+        try:
+            primary_screens = list(filter(lambda x: x.is_primary, screeninfo.get_monitors()))
+            if len(primary_screens) > 0:
+                width = (primary_screens[0].width_mm / 25.4) * 0.73
+                height = (primary_screens[0].height_mm / 25.4) * 0.73
+        except screeninfo.common.ScreenInfoError:
+            logger.info("No screens found, using default plot size of " + str(width) + " in x " + str(height) + " in")
         fig = plt.figure(figsize=(width, height))
         plt.axis("equal")
         entity_labels = []
@@ -268,11 +275,11 @@ def visualize_scenario(scenario, cps=None):
         cps_for_tooltips = []
         centroids_x = []
         centroids_y = []
-        cp_subj_centroids_x = []
-        cp_subj_centroids_y = []
         plotted_labels = []
         entity_points = dict()
-        for entity in scene.has_traffic_entity:
+        traffic_entities = tqdm(scene.has_traffic_entity)
+        for entity in traffic_entities:
+            traffic_entities.set_description(str(entity))
             if len(entity.hasGeometry) > 0:
                 for geo in entity.hasGeometry:
                     shape = wkt.loads(geo.asWKT[0])
@@ -302,16 +309,15 @@ def visualize_scenario(scenario, cps=None):
                                 entity.INDIRECT_is_a:
                             plt.fill(*points, alpha=.3)
                             if entity.has_yaw is not None:
-                                x_dir = (0.3 * math.cos(math.radians(entity.has_yaw)))
-                                y_dir = (0.3 * math.sin(math.radians(entity.has_yaw)))
+                                x_dir = (0.9 * math.cos(math.radians(entity.has_yaw)))
+                                y_dir = (0.9 * math.sin(math.radians(entity.has_yaw)))
                                 plt.arrow(shape.centroid.x, shape.centroid.y, dx=x_dir, dy=y_dir, shape="full",
-                                          length_includes_head=True, color="gray", alpha=0.6, head_width=0.6)
+                                          length_includes_head=True, color="gray", alpha=0.6, head_width=1)
                         entity_labels.append(_describe_entity(entity))
                         # Plot CPs
                         entity_scene_cps = list(filter(lambda scp: entity in scp.subjects, scene_cps))
                         if len(entity_scene_cps) > 0:
-                            cp_subj_centroids_x.append(x)
-                            cp_subj_centroids_y.append(y)
+                            plt.plot(x, y, "o", color="r", mec="k", markersize=3, alpha=1)
                             ent_color = "red"
                         else:
                             ent_color = "black"
@@ -369,36 +375,36 @@ def visualize_scenario(scenario, cps=None):
                                                 while True:
                                                     # Finds a free space to plot label
                                                     label_y = m * label_x + b + 0.05
-                                                    label_x_1 = label_x - label_x_offset / 2
+                                                    label_x_1 = label_x - label_x_offset / 2 + 0.05
                                                     label_y_1 = m * label_x_1 + b
-                                                    label_x_2 = label_x + label_x_offset / 2
+                                                    label_x_2 = label_x + label_x_offset / 2 + 0.05
                                                     label_y_2 = m * label_x_2 + b
                                                     label_line1 = geometry.LineString([(label_x_1, label_y_1),
                                                                                         (label_x_2, label_y_2)])
-                                                    label_line2 = label_line1.union(label_line1.parallel_offset(-0.1))
-                                                    new_bb = label_line2.convex_hull
-                                                    if not _has_collision_with_bbs(plotted_labels, new_bb):
+                                                    new_bb = label_line1.buffer(0.1, cap_style=2)
+                                                    new_bb_rect = list(zip(*new_bb.exterior.xy))[:-1]
+                                                    if not _AVOID_LABEL_COLLISIONS or not \
+                                                            _has_collision_with_bbs(plotted_labels, new_bb_rect):
                                                         break
                                                     label_x += label_x_offset / 10
                                                 annot = plt.annotate(label_string,
                                                                      (label_x, label_y), color=cp_colors[cp_color],
-                                                                     rotation=a, fontsize=4, rotation_mode="anchor")
+                                                                     rotation=a, fontsize=2, rotation_mode="anchor")
                                                 entity_cp_relations.append(annot)
                                                 cps_relations.append(annot)
                                                 relations_per_cp_class[same_line_cps[l_i].predicate] += [annot, arrow]
                                                 cps_for_tooltips.append(same_line_cps[l_i])
-                                                plotted_labels.append(new_bb)
+                                                plotted_labels.append(new_bb_rect)
                                                 label_x += label_x_offset
                                             subj_x = obj_x
                                             subj_y = obj_y
                                             entity_cp_relations += [arrow]
                                 cp_color = (cp_color + 1) % len(cp_colors)
                         entity_relations.append(entity_cp_relations)
-            elif len(set([str(y) for y in entity.is_a]).intersection(_NO_PRINTING_CLASSES)) == 0:
+            elif len(set([str(y) for y in entity.INDIRECT_is_a]).intersection(_NO_PRINTING_CLASSES)) == 0:
                 no_geo_entities.append(_describe_entity(entity))
-        if len(cp_subj_centroids_x) > 0:
-            plt.plot(cp_subj_centroids_x, cp_subj_centroids_y, "o", color="r", mec="k", markersize=10, alpha=1)
-        pl2 = plt.plot(centroids_x, centroids_y, "o", color="b", mec="k", mew=1, alpha=.4)
+        logger.info("Done with layout, creating MPLD3 plot, JS plugins, and HTML string")
+        pl2 = plt.plot(centroids_x, centroids_y, "o", color="b", mec="k", markersize=2, mew=1, alpha=.4)
         tooltip_individuals = ToolTipAndClickInfo(pl2[0], labels=entity_labels, targets=entity_relations,
                                                   targets_per_cp=relations_per_cp_class)
         fig.tight_layout()
@@ -414,18 +420,22 @@ def visualize_scenario(scenario, cps=None):
             <div class="row">
                 <div class="col-md-1">
                     """
+        cp_count_total = len([x for x in cps if (isinstance(x.traffic_model, list) and scene in x.traffic_model) or
+                              x.traffic_model == scenario_inst])
         html += """<div class="">
                         <label class="btn btn-primary active" style="margin-bottom: 10px; width: %s">
                             <input type="checkbox" class="cp-all-button" id="cp-all-button-%s" autocomplete="off" onclick="toggle_cps_all_iframes();" checked>
-                            <span>Show all criticality phenomena</span>
-                        </label>""" % ("100%", str(i))
+                            <span>Show all criticality phenomena (%s)</span>
+                        </label>""" % ("100%", str(i), str(cp_count_total))
         for l, pred in enumerate(sorted(relations_per_cp_class.keys(), key=natural_sort_key)):
+            cp_count = len([x for x in cps if x.predicate == pred and ((isinstance(x.traffic_model, list) and
+                            scene in x.traffic_model) or x.traffic_model == scenario_inst)])
             html += """
                         <br />
                         <label class="btn btn-secondary active" style="margin-bottom: 5px; width: %s">
                             <input type="checkbox" class="cp-button" id="cp-button-%s-%s" autocomplete="off" onclick="toggle_cp_class(this, %s);" checked>
-                            <span>%s</span>
-                        </label>""" % ("100%", str(i), str(l), str(l), pred)
+                            <span>%s (%s)</span>
+                        </label>""" % ("100%", str(i), str(l), str(l), pred, str(cp_count))
         html += """
                     </div>
                 </div>
@@ -812,4 +822,15 @@ def _has_collision_with_bbs(existing_bbs, new_bb):
     """
     Checks if the new rectangle (new_bb) collides with some existing rectangles.
     """
-    return len([x for x in existing_bbs if new_bb.intersects(x)]) > 0
+    a_left = min([x[0] for x in new_bb])
+    a_right = max([x[0] for x in new_bb])
+    a_bottom = min([x[1] for x in new_bb])
+    a_top = max([x[1] for x in new_bb])
+    for bb in existing_bbs:
+        b_left = min([x[0] for x in bb])
+        b_right = max([x[0] for x in bb])
+        b_bottom = min([x[1] for x in bb])
+        b_top = max([x[1] for x in bb])
+        if a_left <= b_right and b_left <= a_right and a_top >= b_bottom and b_top >= a_bottom:
+            return True
+    return False
