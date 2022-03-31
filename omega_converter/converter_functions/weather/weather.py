@@ -17,31 +17,32 @@ def to_auto(cls, world: owlready2.World, scene):
     environment.in_scene.append(scene)
     # precipitation
     # - type
-    if cls.precipitation.type[s] == omega_format.ReferenceTypes.Precipitation.NO_RAIN:
-        environment.is_a.append(l5_de.No_Precipitation_Environment)
-    else:
-        precipitation = l5_core.Precipitation()
-        environment.consists_of.append(precipitation)
-        if cls.precipitation.type[s] == omega_format.ReferenceTypes.Precipitation.LIGHT_RAIN:
-            precipitation.is_a.append(l5_de.Light_Rain)
-        elif cls.precipitation.type[s] == omega_format.ReferenceTypes.Precipitation.MODERATE_RAIN:
-            precipitation.is_a.append(l5_de.Moderate_Rain)
-        elif cls.precipitation.type[s] == omega_format.ReferenceTypes.Precipitation.HEAVY_RAIN:
-            precipitation.is_a.append(l5_de.Heavy_Rain)
-        elif cls.precipitation.type[s] == omega_format.ReferenceTypes.Precipitation.EXTREMELY_HEAVY_RAIN:
-            precipitation.is_a.append(l5_de.Extremely_Haivy_Rain)
-        elif cls.precipitation.type[s] == omega_format.ReferenceTypes.Precipitation.LIGHT_SNOW:
-            precipitation.is_a.append(l5_de.Light_Snow)
-        elif cls.precipitation.type[s] == omega_format.ReferenceTypes.Precipitation.MODERATE_SNOW:
-            precipitation.is_a.append(l5_de.Moderate_Snow)
-        elif cls.precipitation.type[s] == omega_format.ReferenceTypes.Precipitation.HEAVY_SNOW:
-            precipitation.is_a.append(l5_de.Heavy_Snow)
-        # - amount_hourly
-        if s < len(cls.precipitation.amount_hourly):
-            precipitation.has_precipitation_intensity_hourly = float(cls.precipitation.amount_hourly[s])
-        # - amount_minute
-        if s < len(cls.precipitation.amount_minute):
-            precipitation.has_precipitation_intensity_minutely = float(cls.precipitation.amount_minute[s])
+    if s < len(cls.precipitation.type):
+        if cls.precipitation.type[s] == omega_format.ReferenceTypes.Precipitation.NO_RAIN:
+            environment.is_a.append(l5_de.No_Precipitation_Environment)
+        else:
+            precipitation = l5_core.Precipitation()
+            environment.consists_of.append(precipitation)
+            if cls.precipitation.type[s] == omega_format.ReferenceTypes.Precipitation.LIGHT_RAIN:
+                precipitation.is_a.append(l5_de.Light_Rain)
+            elif cls.precipitation.type[s] == omega_format.ReferenceTypes.Precipitation.MODERATE_RAIN:
+                precipitation.is_a.append(l5_de.Moderate_Rain)
+            elif cls.precipitation.type[s] == omega_format.ReferenceTypes.Precipitation.HEAVY_RAIN:
+                precipitation.is_a.append(l5_de.Heavy_Rain)
+            elif cls.precipitation.type[s] == omega_format.ReferenceTypes.Precipitation.EXTREMELY_HEAVY_RAIN:
+                precipitation.is_a.append(l5_de.Extremely_Haivy_Rain)
+            elif cls.precipitation.type[s] == omega_format.ReferenceTypes.Precipitation.LIGHT_SNOW:
+                precipitation.is_a.append(l5_de.Light_Snow)
+            elif cls.precipitation.type[s] == omega_format.ReferenceTypes.Precipitation.MODERATE_SNOW:
+                precipitation.is_a.append(l5_de.Moderate_Snow)
+            elif cls.precipitation.type[s] == omega_format.ReferenceTypes.Precipitation.HEAVY_SNOW:
+                precipitation.is_a.append(l5_de.Heavy_Snow)
+            # - amount_hourly
+            if s < len(cls.precipitation.amount_hourly):
+                precipitation.has_precipitation_intensity_hourly = float(cls.precipitation.amount_hourly[s])
+            # - amount_minute
+            if s < len(cls.precipitation.amount_minute):
+                precipitation.has_precipitation_intensity_minutely = float(cls.precipitation.amount_minute[s])
     # - new_snow_depth, snow_depth
     if s < len(cls.precipitation.snow_depth):
         if cls.precipitation.snow_depth[s] > 0:
