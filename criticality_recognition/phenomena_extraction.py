@@ -111,7 +111,7 @@ class Criticality_Phenomenon:
         for obj_predicate in self.objects.keys():
             obj_and_classes = get_most_specific_classes(self.objects[obj_predicate])
             csv_res += obj_predicate + ": " + ", ".join([str(x[0]) + " (" + ", ".join(x[1]) + ")" for x in
-                                                         obj_and_classes])
+                                                         obj_and_classes]) + " | "
         return csv_res
 
     def at_time(self):
@@ -191,7 +191,10 @@ def phenomena_scenario(scenario: list or owlready2.World) -> list:
         cp_ont = auto.auto.get_ontology(auto.auto.Ontology.Criticality_Phenomena, scenario)
         scenarios = list(scenario.search(type=tm.Scenario))
         if len(scenarios) > 0:
-            search_space = tqdm.tqdm(list(scenario.search(type=cp_ont.Criticality_Phenomenon)))
+            if logger.level == logging.DEBUG:
+                search_space = tqdm.tqdm(list(scenario.search(type=cp_ont.Criticality_Phenomenon)))
+            else:
+                search_space = scenario.search(type=cp_ont.Criticality_Phenomenon)
             for cp in search_space:
                 cp_clss = list(filter(lambda x: x in scenario.classes(),
                                       [y for y in cp.INDIRECT_is_a if hasattr(y, "namespace") and y.namespace.base_iri
