@@ -22,7 +22,7 @@ def merge(world1: owlready2.World, world2: owlready2.World, add_temporal_identit
     """
     ontology1 = world1.get_ontology(_INFERRENCES_ONTOLOGY)
     ontology2 = world2.get_ontology(_INFERRENCES_ONTOLOGY)
-    individuals = {}
+    individuals = {}  # A dict of 'old' (world 2) iris to newly created individual objects (in world 1)
     world1.graph.acquire_write_lock()
 
     # Prepares logging
@@ -88,6 +88,7 @@ def merge(world1: owlready2.World, world2: owlready2.World, add_temporal_identit
             # Adding all triples containing individual as object
             _add_to_world_inv(ontology1, ontology2, world1, world2, individual.iri, individuals)
             # Optional: Setting identical to relation (storing temporal identity)
+            # TODO seems buggy on inD. Is currently not used, i.e. replaced by a-posteriori add_temporal_identity().
             if add_temporal_identity:
                 for i in individual.identical_to:
                     p_storid = ontology1._abbreviate("http://purl.org/auto/traffic_model#identical_to", False)
@@ -95,10 +96,25 @@ def merge(world1: owlready2.World, world2: owlready2.World, add_temporal_identit
                     o_storid = ontology1._abbreviate(i.iri, False)
                     if o_storid is not None:
                         world1._add_triples_with_update(ontology1, [(individuals[individual.iri].storid, p_storid,
-                                                       o_storid)])
+                                                        o_storid)])
                     # else: this is fine - in this case, the individual just "appeared" in the world
 
     world1.graph.release_write_lock()
+
+
+def add_temporal_identity(scenario: owlready2.World):
+    """
+    Adds the relation 'identical_to' between all individuals in scenario that have the same identifier (using the data
+    property 'identifier').
+    :param scenario: The scenario with multiple scenes for whose individuals to add temporal identities between.
+    """
+    for individual1 in scenario.search(identifier="*"):
+        if not isinstance(individual1, owlready2.entity.ThingClass):
+            individual1.identical_to = []
+            for individual2 in scenario.search(identifier="*"):
+                if not isinstance(individual2, owlready2.entity.ThingClass) and individual1 != individual2 and \
+                        individual1.identifier[0] == individual2.identifier[0]:
+                    individual1.identical_to.append(individual2)
 
 
 def _add_to_world(ontology1: owlready2.Ontology, ontology2: owlready2.Ontology, world1: owlready2.World,

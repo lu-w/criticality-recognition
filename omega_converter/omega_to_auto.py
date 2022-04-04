@@ -223,6 +223,7 @@ def convert(omega_file="inD.hdf5", onto_path="auto/ontology", cp=False) -> list:
     :return: The scenarios as extracted by the OMEGA library from the HDF5 file as a list of owlready2 worlds.
     """
     worlds = []
+    logger.debug("Extracting snippets from OMEGA file")
     snippets = list(filter(lambda x: (x.timestamps.val[-1] - x.timestamps.val[0]) <= MAX_SCENARIO_DURATION,
                            _load_hdf5(omega_file).extract_snippets()))[:1]  # TODO debug, remove
     for i, rr in enumerate(snippets):

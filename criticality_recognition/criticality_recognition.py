@@ -36,7 +36,7 @@ def reason_scenario(scenario: list, pellet_output=False, no_reasoning=False, sce
     logger.debug("Merging scene worlds into a single scenario world")
     for i, scene_world in enumerate(scenario[1:]):
         logger.debug("Merging scene world " + str(i + 2) + " into scene world " + str(i + 1))
-        world_merger.merge(scenario[0], scene_world, add_temporal_identity=True)
+        world_merger.merge(scenario[0], scene_world, add_temporal_identity=False)
 
     # Destroying large ontologies in the scene worlds (some will remain because of global references)
     for scene_world in scenario[1:]:
@@ -48,6 +48,7 @@ def reason_scenario(scenario: list, pellet_output=False, no_reasoning=False, sce
 
     # Create scenario in world
     merged_scenario = scenario[0]
+    world_merger.add_temporal_identity(merged_scenario)
     tm = auto.get_ontology(auto.Ontology.Traffic_Model, merged_scenario)
     ti = auto.get_ontology(auto.Ontology.Time, merged_scenario)
     scenes = merged_scenario.search(type=tm.Scene)
