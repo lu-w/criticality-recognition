@@ -1,6 +1,7 @@
 import argparse
 import logging
 import os
+import tempfile
 from importlib import reload
 
 import owlready2
@@ -22,6 +23,7 @@ parser.add_argument("--output", type=str, nargs="?", default="/tmp/", metavar="F
                     help="Optional. Store visualizations (folder with HTML files) in the given folder. Default: /tmp/")
 parser.add_argument("input", type=str, metavar="FILE", help="Input file. One .owl file containing exactly one scenario "
                                                             "to visualize")
+parser.add_argument("--no-visualization", action="store_true", help="If flag is set, does not produce visualization.")
 args = parser.parse_args()
 
 # Log configuration
@@ -56,8 +58,10 @@ logger.info("Extracting criticality phenomena from scenario")
 cps = phenomena_extraction.phenomena_scenario(world)
 
 # Visualize
-logger.info("Creating visualization for scenario")
-tmp_dir = auto_visualizer.visualize_scenario(world, cps)
+tmp_dir = tempfile.gettempdir()
+if not args.no_visualization:
+    logger.info("Creating visualization for scenario")
+    tmp_dir = auto_visualizer.visualize_scenario(world, cps)
 
 if args.cps != "none":
     # Print CPs

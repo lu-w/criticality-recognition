@@ -21,8 +21,8 @@ from .converter_functions.road.lane import *
 from .converter_functions.road.lateral_marking import *
 
 # Constants
-MAX_SCENARIO_DURATION = 5  # s, longer scenarios will not be converted
-MAX_SCENES_PER_SCENARIO = 4  # how many scenes a scenario shall have - rest is removed (samples equidistantly)
+MAX_SCENARIO_DURATION = 10  # s, longer scenarios will not be converted
+SAMPLING_RATE = 1  # Hz, how many scenes a scenario per second shall have - rest is removed (sampled equidistantly)
 
 # Logging
 logger = logging.getLogger(__name__)
@@ -225,11 +225,11 @@ def convert(omega_file="inD.hdf5", onto_path="auto/ontology", cp=False) -> list:
     worlds = []
     logger.debug("Extracting snippets from OMEGA file")
     snippets = list(filter(lambda x: (x.timestamps.val[-1] - x.timestamps.val[0]) <= MAX_SCENARIO_DURATION,
-                           _load_hdf5(omega_file).extract_snippets()))[:1]  # TODO debug, remove
+                           _load_hdf5(omega_file).extract_snippets()))
     for i, rr in enumerate(snippets):
         logger.debug("Creating OWL world for snippet " + str(i + 1) + "/" + str(len(snippets)) + " (" +
                      str(str(rr.timestamps.val[0])) + "s - " + str(str(rr.timestamps.val[-1])) + "s)")
-        number_of_scenes = min(MAX_SCENES_PER_SCENARIO, len(rr.timestamps.val))
+        number_of_scenes = int(rr.timestamps.val[-1]) * SAMPLING_RATE
         if number_of_scenes > 1:
             scene_jumps = (len(rr.timestamps.val) - 1) // (number_of_scenes - 1)
         else:

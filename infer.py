@@ -12,8 +12,8 @@ from inputs import example_fuc_2_3
 # Instantiate the parser
 parser = argparse.ArgumentParser(description="Inference of criticality phenomena with A.U.T.O. Performs criticality "
                                              "phenomena reasoning on either an A.U.T.O. A-Box or an OMEGA hdf5 file.")
-parser.add_argument("--auto", type=str, default="auto/ontology", metavar="FOLDER_PATH", help="Path to folder with A.U.T.O. "
-                                                                                       "Default: auto/ontology")
+parser.add_argument("--auto", type=str, default="auto/ontology", metavar="FOLDER_PATH",
+                    help="Path to folder with A.U.T.O. Default: auto/ontology")
 parser.add_argument("--format", type=str, default="natural", metavar="{csv, natural, none}",
                     help="Whether and how to print the criticality phenomena output. Default: natural")
 parser.add_argument("--output", type=str, nargs="?", metavar="FILE", help="Optional. Store the resulting inferences in "
