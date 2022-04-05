@@ -229,7 +229,7 @@ def convert(omega_file="inD.hdf5", onto_path="auto/ontology", cp=False) -> list:
     for i, rr in enumerate(snippets):
         logger.debug("Creating OWL world for snippet " + str(i + 1) + "/" + str(len(snippets)) + " (" +
                      str(str(rr.timestamps.val[0])) + "s - " + str(str(rr.timestamps.val[-1])) + "s)")
-        number_of_scenes = int(rr.timestamps.val[-1]) * SAMPLING_RATE
+        number_of_scenes = int(rr.timestamps.val[-1] - rr.timestamps.val[0]) * SAMPLING_RATE
         if number_of_scenes > 1:
             scene_jumps = (len(rr.timestamps.val) - 1) // (number_of_scenes - 1)
         else:
