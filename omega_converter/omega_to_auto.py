@@ -21,8 +21,7 @@ from .converter_functions.road.lane import *
 from .converter_functions.road.lateral_marking import *
 
 # Constants
-MAX_SCENARIO_DURATION = 10  # s, longer scenarios will not be converted
-SAMPLING_RATE = 1  # Hz, how many scenes a scenario per second shall have - rest is removed (sampled equidistantly)
+MAX_SCENARIO_DURATION = 30  # s, longer scenarios will not be converted
 
 # Logging
 logger = logging.getLogger(__name__)
@@ -112,8 +111,9 @@ def _to_auto(rr: omega_format.ReferenceRecording, world: owlready2.World, scene_
             if len(scenes) > 0:
                 scene.after = [scenes[-1]]
 
-            # Convert road users
+            # Convert road users and ego vehicle
             road_users_s = [x for x in {k: v for k, v in rr.road_users.items()}.items() if x[1].birth <= s <= x[1].end]
+            road_users_s.append((rr.ego_vehicle.id, rr.ego_vehicle))
             logger.debug("Converting " + str(len(road_users_s)) + " road users")
             for i, road_user in road_users_s:
                 user_instances = road_user.to_auto(world, scene, i)
@@ -214,22 +214,27 @@ def _to_auto(rr: omega_format.ReferenceRecording, world: owlready2.World, scene_
     logger.debug("Finished converting OMEGA to OWL")
 
 
-def convert(omega_file="inD.hdf5", onto_path="auto/ontology", cp=False) -> list:
+def convert(omega_file="inD.hdf5", onto_path="auto/ontology", cp=False, scenarios=None, sampling_rate=1) -> list:
     """
     Main entry function for OMEGA to A.U.T.O. conversion.
     :param omega_file: the HDF5 file to load the OMEGA data from.
     :param onto_path: The path to the folder in which A.U.T.O. is located.
     :param cp: Whether to also load the two criticality phenomena ontologies (needed for criticality inference).
+    :param scenarios: An optional list of scenario IDs (as integers) which shall be selected. The rest is then ignored.
+    :param sampling_rate: The rate (in Hertz) to which scenarios are reduced. Default is 1 scene per second.
     :return: The scenarios as extracted by the OMEGA library from the HDF5 file as a list of owlready2 worlds.
     """
     worlds = []
+    omega_data = _load_hdf5(omega_file)
     logger.debug("Extracting snippets from OMEGA file")
-    snippets = list(filter(lambda x: (x.timestamps.val[-1] - x.timestamps.val[0]) <= MAX_SCENARIO_DURATION,
-                           _load_hdf5(omega_file).extract_snippets()))
+    omega_snippets = omega_data.extract_snippets()
+    snippets = list(filter(lambda x: (x.timestamps.val[-1] - x.timestamps.val[0]) <= MAX_SCENARIO_DURATION and
+                                     (scenarios is None or x.ego_vehicle.id in scenarios),
+                           omega_snippets))
     for i, rr in enumerate(snippets):
         logger.debug("Creating OWL world for snippet " + str(i + 1) + "/" + str(len(snippets)) + " (" +
                      str(str(rr.timestamps.val[0])) + "s - " + str(str(rr.timestamps.val[-1])) + "s)")
-        number_of_scenes = int(rr.timestamps.val[-1] - rr.timestamps.val[0]) * SAMPLING_RATE
+        number_of_scenes = int(int(rr.timestamps.val[-1] - rr.timestamps.val[0]) * sampling_rate)
         if number_of_scenes > 1:
             scene_jumps = (len(rr.timestamps.val) - 1) // (number_of_scenes - 1)
         else:

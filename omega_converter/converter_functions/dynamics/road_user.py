@@ -7,7 +7,6 @@ def to_auto(cls, world: owlready2.World, scene, identifier=None):
     s = scene.inTimePosition[1].numericPosition[0] - cls.birth
 
     # Fetches ontologies
-    ac = auto.get_ontology(auto.Ontology.Act, world)
     pe = auto.get_ontology(auto.Ontology.Perception, world)
     ph = auto.get_ontology(auto.Ontology.Physics, world)
     geo = auto.get_ontology(auto.Ontology.GeoSPARQL, world)

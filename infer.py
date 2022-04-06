@@ -24,6 +24,11 @@ parser.add_argument("--convert-only", action="store_true", help="If flag is set,
                                                                 "each scenario)")
 parser.add_argument("--memory", type=int, metavar="N", help="Maximum memory (GB) for Pellet JVM. Default: 70 percent of"
                                                             " available RAM")
+parser.add_argument("--scenarios", type=int, nargs="+", metavar="N", help="The ID(s) of the scenario to analyze. "
+                                                                          "Default: Empty, therefore all fitting "
+                                                                          "scenarios.")
+parser.add_argument("--hertz", type=float, metavar="N", help="The sampling rate to reduce the input scenarios to. Can "
+                                                             "also be a fraction. Default: 1 Hz.")
 parser.add_argument("--logging", type=str, metavar="{critical, error, warning, info, debug}", help="Log level. Default:"
                                                                                                    " info")
 parser.add_argument("--pellet-output", action="store_true", help="If flag is set, shows Pellet's output")
@@ -62,7 +67,8 @@ logger.info("Pellet will use a maximum of " + str(owlready2.reasoning.JAVA_MEMOR
 
 # Reading inputs
 if args.input.endswith(".hdf5"):
-    scenarios = omega_to_auto.convert(os.path.abspath(args.input), args.auto, cp=True)
+    scenarios = omega_to_auto.convert(os.path.abspath(args.input), args.auto, cp=True, scenarios=args.scenarios,
+                                      sampling_rate=args.hertz)
 elif args.input == "fuc23":
     scenarios = [example_fuc_2_3.get_fuc23_worlds()]
 else:

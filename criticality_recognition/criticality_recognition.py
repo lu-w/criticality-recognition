@@ -35,7 +35,7 @@ def reason_scenario(scenario: list, pellet_output=False, no_reasoning=False, sce
     # Merging inferred worlds & re-adding temporal individual identity information
     logger.debug("Merging scene worlds into a single scenario world")
     for i, scene_world in enumerate(scenario[1:]):
-        logger.debug("Merging scene world " + str(i + 2) + " into scene world " + str(i + 1))
+        logger.debug("Merging scene world " + str(i + 2) + " into scene world 1")
         world_merger.merge(scenario[0], scene_world, add_temporal_identity=False)
 
     # Destroying large ontologies in the scene worlds (some will remain because of global references)
