@@ -21,7 +21,7 @@ from .converter_functions.road.lane import *
 from .converter_functions.road.lateral_marking import *
 
 # Constants
-MAX_SCENARIO_DURATION = 30  # s, longer scenarios will not be converted
+MAX_SCENARIO_DURATION = 50  # s, longer scenarios will not be converted
 
 # Logging
 logger = logging.getLogger(__name__)
@@ -97,7 +97,7 @@ def _to_auto(rr: omega_format.ReferenceRecording, world: owlready2.World, scene_
 
     for s, t in enumerate(rr.timestamps.val):
         if s == scene_number:
-            logger.debug("Scene " + str(s + 1) + "/" + str(len(rr.timestamps.val)))
+            logger.debug("Scene " + str(s + 1) + " (" + str(t) + "s) / " + str(len(rr.timestamps.val)))
 
             # Create scene
             time = auto.get_ontology(auto.Ontology.Time, world).TimePosition()
@@ -214,7 +214,8 @@ def _to_auto(rr: omega_format.ReferenceRecording, world: owlready2.World, scene_
     logger.debug("Finished converting OMEGA to OWL")
 
 
-def convert(omega_file="inD.hdf5", onto_path="auto/ontology", cp=False, scenarios=None, sampling_rate=1) -> list:
+def convert(omega_file="inD.hdf5", onto_path="auto/ontology", cp=False, scenarios=None, sampling_rate=1, start_offset=0,
+            end_offset=0) -> list:
     """
     Main entry function for OMEGA to A.U.T.O. conversion.
     :param omega_file: the HDF5 file to load the OMEGA data from.
@@ -222,33 +223,45 @@ def convert(omega_file="inD.hdf5", onto_path="auto/ontology", cp=False, scenario
     :param cp: Whether to also load the two criticality phenomena ontologies (needed for criticality inference).
     :param scenarios: An optional list of scenario IDs (as integers) which shall be selected. The rest is then ignored.
     :param sampling_rate: The rate (in Hertz) to which scenarios are reduced. Default is 1 scene per second.
+    :param start_offset: The offset to start sampling the scenarios from (in s).
+    :param end_offset: The offset to end sampling the scenarios from (in s).
     :return: The scenarios as extracted by the OMEGA library from the HDF5 file as a list of owlready2 worlds.
     """
+    if not start_offset:
+        start_offset = 0
+    if not end_offset:
+        end_offset = 0
     worlds = []
     omega_data = _load_hdf5(omega_file)
     logger.debug("Extracting snippets from OMEGA file")
-    omega_snippets = omega_data.extract_snippets()
-    snippets = list(filter(lambda x: (x.timestamps.val[-1] - x.timestamps.val[0]) <= MAX_SCENARIO_DURATION and
-                                     (scenarios is None or x.ego_vehicle.id in scenarios),
+    omega_snippets = omega_data.extract_snippets(ids=scenarios)
+    snippets = list(filter(lambda x: (x.timestamps.val[-1] - x.timestamps.val[0]) <= MAX_SCENARIO_DURATION,
                            omega_snippets))
-    for i, rr in enumerate(snippets):
-        logger.debug("Creating OWL world for snippet " + str(i + 1) + "/" + str(len(snippets)) + " (" +
-                     str(str(rr.timestamps.val[0])) + "s - " + str(str(rr.timestamps.val[-1])) + "s)")
-        number_of_scenes = int(int(rr.timestamps.val[-1] - rr.timestamps.val[0]) * sampling_rate)
+    for rr in omega_snippets:
+        rr_hz = 1 / (rr.timestamps.val[1] - rr.timestamps.val[0])
+        scene_number = int(start_offset * rr_hz)
+        snippet_start = rr.timestamps.val[0] + start_offset
+        snippet_end = rr.timestamps.val[-1] - end_offset
+        if snippet_start >= snippet_end:
+            logger.warning("Invalid snippet start / end offsets. Defaulting to 0.")
+            snippet_start = rr.timestamps.val[0]
+            snippet_end = rr.timestamps.val[-1]
+        logger.debug("Creating OWL world for snippet " + str(scene_number) + "/" + str(len(snippets)) + " (" +
+                     str(str(snippet_start)) + "s - " + str(str(snippet_end)) + "s)")
+        number_of_scenes = int(int(snippet_end - snippet_start) * sampling_rate)
         if number_of_scenes > 1:
-            scene_jumps = (len(rr.timestamps.val) - 1) // (number_of_scenes - 1)
+            scene_jumps = (((snippet_end - snippet_start) * rr_hz) - 1) // (number_of_scenes - 1)
         else:
             scene_jumps = 1
         brave_new_worlds = [owlready2.World(
             filename=os.path.join(tempfile.gettempdir(), next(tempfile._get_candidate_names())))
             for _ in range(number_of_scenes)]
-        scene_number = 0
         for brave_new_world in brave_new_worlds:
             if cp:
                 auto.load_cp(onto_path, brave_new_world)
             else:
                 auto.load(onto_path, brave_new_world)
-            if scene_number == 0:
+            if scene_number == int(start_offset * rr_hz):
                 logger.debug("Size of TBox: " + str(len([x for x in brave_new_world.graph._iter_triples()])) +
                              " triples")
             _to_auto(rr, brave_new_world, scene_number=scene_number)

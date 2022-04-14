@@ -1,3 +1,4 @@
+import matplotlib
 import shapely.geometry
 import numpy as np
 
@@ -78,11 +79,11 @@ def register(perception: owlready2.Ontology):
                             ints.append((a, intersection))
                             if _DEBUG_OCCLUSION:
                                 if not intersection.is_empty and not isinstance(intersection, Point):
-                                    if hasattr(intersection, "exterior"):
-                                        plt.fill(*intersection.exterior.xy, color="r")
-                                    elif isinstance(intersection, MultiPolygon):
-                                        for pg in intersection:
-                                            plt.fill(*pg.exterior.xy, color="r")
+                                    if hasattr(cutoffs[a], "exterior"):
+                                        plt.fill(*cutoffs[a].exterior.xy, color="coral")
+                                    elif isinstance(cutoffs[a], MultiPolygon):
+                                        for pg in cutoffs[a]:
+                                            plt.fill(*pg.exterior.xy, color="coral")
                 if len(ints) > 0:
                     union = ints[0][1]
                     for j in ints[1:]:
@@ -151,18 +152,19 @@ def register(perception: owlready2.Ontology):
                             a = wkt.loads(wkt.dumps(wkt.loads(x.hasGeometry[0].asWKT[0]), output_dimension=2)).buffer(0)
                             if not a.is_empty:
                                 if hasattr(a, "exterior"):
-                                    plt.plot(*a.exterior.xy, color="g")
-                                    plt.text(a.centroid.x, a.centroid.y, str(x))
+                                    plt.plot(*a.exterior.xy, color="black")
                                 else:
                                     try:
-                                        plt.plot(*a.xy, color="g")
+                                        plt.plot(*a.xy, color="black")
                                     except NotImplementedError:
                                         pass
                         for x in occluding_others:
                             a = wkt.loads(wkt.dumps(wkt.loads(x.hasGeometry[0].asWKT[0]), output_dimension=2)).buffer(0)
                             if hasattr(a, "exterior"):
-                                plt.fill(*a.exterior.xy, color="b")
+                                plt.fill(*a.exterior.xy, color="lightblue")
                             else:
-                                plt.plot(*a.xy, color="b")
+                                plt.fill(*a.xy, color="lightblue")
                         plt.axis('scaled')
+                        import code
+                        code.interact(local=locals())
                         plt.show()

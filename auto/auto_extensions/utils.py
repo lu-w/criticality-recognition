@@ -21,7 +21,8 @@ def has_geometry(x):
     Returns true iff x has a geometry represented as a WKT literal.
     """
     try:
-        return hasattr(x, "hasGeometry") and len(x.hasGeometry) > 0 and len(x.hasGeometry[0].asWKT[0]) > 0
+        return hasattr(x, "hasGeometry") and len(x.hasGeometry) > 0 and len(x.hasGeometry[0].asWKT) > 0 and \
+               x.hasGeometry[0].asWKT[0] != "POLYGON EMPTY"
     except TypeError:
         return False
 
@@ -98,9 +99,6 @@ def left_back_point(a, yaw):
             if 180 <= angle < 270:
                 return p
     except NotImplementedError:
-        print(a)
-        import code
-        code.interact(local=locals())
         return a.centroid
 
 

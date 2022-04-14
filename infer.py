@@ -1,5 +1,7 @@
 import argparse
 import logging
+
+import matplotlib
 import owlready2
 import os
 import psutil
@@ -27,6 +29,8 @@ parser.add_argument("--memory", type=int, metavar="N", help="Maximum memory (GB)
 parser.add_argument("--scenarios", type=int, nargs="+", metavar="N", help="The ID(s) of the scenario to analyze. "
                                                                           "Default: Empty, therefore all fitting "
                                                                           "scenarios.")
+parser.add_argument("--start", type=float, metavar="N", help="Optional start offset (added) for scenarios (in s).")
+parser.add_argument("--end", type=float, metavar="N", help="Optional end offset (subtracted) for scenarios (in s).")
 parser.add_argument("--hertz", type=float, metavar="N", help="The sampling rate to reduce the input scenarios to. Can "
                                                              "also be a fraction. Default: 1 Hz.")
 parser.add_argument("--logging", type=str, metavar="{critical, error, warning, info, debug}", help="Log level. Default:"
@@ -68,7 +72,7 @@ logger.info("Pellet will use a maximum of " + str(owlready2.reasoning.JAVA_MEMOR
 # Reading inputs
 if args.input.endswith(".hdf5"):
     scenarios = omega_to_auto.convert(os.path.abspath(args.input), args.auto, cp=True, scenarios=args.scenarios,
-                                      sampling_rate=args.hertz)
+                                      sampling_rate=args.hertz, start_offset=args.start, end_offset=args.end)
 elif args.input == "fuc23":
     scenarios = [example_fuc_2_3.get_fuc23_worlds()]
 else:

@@ -4,6 +4,7 @@ import owlready2
 from shapely import wkt
 from shapely.geometry import Polygon
 from matplotlib import pyplot as plt
+import matplotlib
 
 from .utils import *
 
@@ -133,7 +134,7 @@ def register(l4_core: owlready2.Ontology, l4_de: owlready2.Ontology, l2_de: owlr
         class Driver(owlready2.Thing):
             @augment(AugmentationType.REIFIED_OBJECT_PROPERTY, l4_de.Pass,
                      ["conducted_by", "has_participant", "hasBeginning", "hasEnd", "belongs_to"])
-            @concepts(l4_core.Driver, physics.Spatial_Object, time.TimePosition, physics.is_max_15_m_away)
+            @concepts(l4_core.Driver, physics.Spatial_Object, time.TimePosition)
             def augment_pass(self, other: l4_core.L4_Entity):
                 if physics.Spatial_Object in other.INDIRECT_is_a and len(self.drives) > 0:
                     passes = False
@@ -169,6 +170,7 @@ def register(l4_core: owlready2.Ontology, l4_de: owlready2.Ontology, l2_de: owlr
                                         time_slices.append((s_ts, o_ts))
                             if len(time_slices) > 0 and time_slices[-1][0] not in time_slices[-1][1].is_behind:
                                 for t in time_slices:
+                                    # if t[0] not in t[1].is_in_proximity: break
                                     if t[0] in t[1].is_in_front_of and t[0] in t[1].is_in_proximity:
                                         passes = True
                                         scene_1 = t[0].in_traffic_model[0]

@@ -90,7 +90,10 @@ def reason_scenario(scenario: list, pellet_output=False, no_reasoning=False, sce
     # Restore scenario
     for undo, individual in reversed(undos + aug_undos):
         # Final undo: Undoing deletion of individual
-        undo()
+        try:
+            undo()
+        except:
+            pass
         # Hacky bugfix, Python seems to cache some properties badly... We need to call __getattr__, otherwise the
         # cached properties will be used (which may be empty because of the previous deletion).
         for prop in individual.__dict__.keys():
@@ -114,7 +117,10 @@ def reason_scenario(scenario: list, pellet_output=False, no_reasoning=False, sce
     for individual in geometrical_individuals:
         if len(individual.hasGeometry) > 1:
             for geom in sorted(individual.hasGeometry, key=natural_sort_key)[1:]:
-                owlready2.destroy_entity(geom)
+                try:
+                    owlready2.destroy_entity(geom)
+                except:
+                    pass
 
     logger.debug("Restored full scenario individuals: " + str(len(list(merged_scenario.individuals()))))
     logger.debug("Fully finished criticality reasoning on scenario. Took %.2f s" % (timeit.default_timer() - t1))
@@ -133,7 +139,7 @@ def _reason(world: owlready2.World, aug_undos=None, pellet_output=False) -> list
     and perform augmentation on this state (since reduction might reduce concrete information that are needed for
     augmentation). Before reasoning, we obviously use a reduced ABox.
     :param pellet_output: Whether to show the output of Pellet.
-    :return: A list of undo methods that shall be executed in reverse order to restore the previous state. (TODO)
+    :return: A list of undo methods that shall be executed in reverse order to restore the previous state.
     """
     # Fetch relevant ontologies
     tm = auto.get_ontology(auto.Ontology.Traffic_Model, world)
@@ -184,7 +190,10 @@ def _reason(world: owlready2.World, aug_undos=None, pellet_output=False) -> list
         logger.debug("Criticality reasoning iteration #" + str(c) + " done. Took %.2f s" % (t2 - t1))
         logger.debug("Restoring cleaned up A-Box...")
         for undo, individual in reversed(cleanup_undos):
-            undo()
+            try:
+                undo()
+            except:
+                pass
             for prop in individual.__dict__.keys():
                 if individual.namespace.world._props.get(prop):
                     try:
@@ -199,7 +208,10 @@ def _reason(world: owlready2.World, aug_undos=None, pellet_output=False) -> list
         if aug_undos:
             for undo, individual in reversed(aug_undos):
                 # Reasoning iteration: Undoing deletion of individual
-                undo()
+                try:
+                    undo()
+                except:
+                    pass
                 for prop in individual.__dict__.keys():
                     if individual.namespace.world._props.get(prop):
                         try:
@@ -220,8 +232,11 @@ def _reason(world: owlready2.World, aug_undos=None, pellet_output=False) -> list
             new_aug_undos = []
             for undo, individual in aug_undos:
                 # Reasoning iteration: Destroying individual
-                new_aug_undo = owlready2.destroy_entity(individual, undoable=True)
-                new_aug_undos.append((new_aug_undo, individual))
+                try:
+                    new_aug_undo = owlready2.destroy_entity(individual, undoable=True)
+                    new_aug_undos.append((new_aug_undo, individual))
+                except:
+                    pass
             aug_undos = new_aug_undos
         # Add augmented entities to scene or scenario
         if single_scene:
@@ -257,6 +272,9 @@ def _cleanup_abox_for_reasoning(world) -> list:
     undos = []
     individuals = [x for x in world.individuals() if len(set(x.INDIRECT_is_a).intersection(clean_clss)) > 0]
     for individual in individuals:
-        undo = owlready2.destroy_entity(individual, undoable=True)
-        undos.append((undo, individual))
+        try:
+            undo = owlready2.destroy_entity(individual, undoable=True)
+            undos.append((undo, individual))
+        except:
+            pass
     return undos

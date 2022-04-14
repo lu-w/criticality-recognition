@@ -112,6 +112,8 @@ class Criticality_Phenomenon:
             obj_and_classes = get_most_specific_classes(self.objects[obj_predicate])
             csv_res += obj_predicate + ": " + ", ".join([str(x[0]) + " (" + ", ".join(x[1]) + ")" for x in
                                                          obj_and_classes]) + " | "
+        if csv_res.endswith(" | "):
+            csv_res = csv_res[:-3]
         return csv_res
 
     def at_time(self):

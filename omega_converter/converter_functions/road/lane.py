@@ -4,7 +4,6 @@ from ..utils import *
 
 @monkeypatch(omega_format.Lane)
 def to_auto(cls, world: owlready2.World, scenes, identifier=None, parent_identifier=None):
-    assert not (cls.border_right_is_inverted or cls.border_left_is_inverted)
     # Note: classification and sub_type are ignored as this can be easily inferred by spatial properties
 
     # Fetches ontologies
@@ -23,11 +22,25 @@ def to_auto(cls, world: owlready2.World, scenes, identifier=None, parent_identif
     poly_left = cls.border_left.value.polyline
     poly_right = cls.border_right.value.polyline
     wkt_string = "POLYGON (("
-    for i in range(len(poly_left.pos_x)):
+    if not cls.border_left_is_inverted:
+        left_iter = range(len(poly_left.pos_x))
+    else:
+        left_iter = reversed(range(len(poly_left.pos_x)))
+    for i in left_iter:
         wkt_string += str(poly_left.pos_x[i]) + " " + str(poly_left.pos_y[i]) + " " + str(poly_left.pos_z[i]) + ", "
-    for i in reversed(range(len(poly_right.pos_x))):
-        wkt_string += str(poly_right.pos_x[i]) + " " + str(poly_right.pos_y[i]) + " " + str(poly_right.pos_z[i]) + ", "
-    wkt_string += str(poly_left.pos_x[0]) + " " + str(poly_left.pos_y[0]) + " " + str(poly_left.pos_z[0]) + "))"
+    if not cls.border_right_is_inverted:
+        right_iter = reversed(range(len(poly_right.pos_x)))
+    else:
+        right_iter = range(len(poly_right.pos_x))
+    for i in right_iter:
+        wkt_string += str(poly_right.pos_x[i]) + " " + str(poly_right.pos_y[i]) + " " + str(poly_right.pos_z[i]) + \
+                      ", "
+    if not cls.border_left_is_inverted:
+        start_point = 0
+    else:
+        start_point = -1
+    wkt_string += str(poly_left.pos_x[start_point]) + " " + str(poly_left.pos_y[start_point]) + " " + \
+                  str(poly_left.pos_z[start_point]) + "))"
     geom = wkt.loads(wkt_string)
     lane_geometry = geo.Geometry()
     lane_geometry.asWKT = [str(geom)]
