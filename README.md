@@ -17,7 +17,7 @@ The installation instructions for `omega_format` are given in `omega_converter/o
 
 Once `omega_format` is installed, continue with the dependencies for this package as listed in `requirements.txt`. 
 Install them by `pip install -r requirements.txt`.
-Note that `owl_augmentator` is a local package from a git submodule which you can install via calling `pip install -e owl_augmentator` from this directory. 
+Note that `owl_augmentator`, `pyauto`, and `omega2auto` are local packages from git submodules which you can install via calling `pip install -e $pkg_name` from this directory. 
 
 #### Patching `owlready2` <0.36
 
