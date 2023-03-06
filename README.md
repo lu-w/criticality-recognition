@@ -3,8 +3,8 @@
 This software demonstrates how the formalizations of criticality phenomena within A.U.T.O. can be used to infer their presence in scenes and scenarios.  
 We provide two use cases:
 
-1. Reasoning on the VVMethods Function Use Case 2.3
-2. Reasoning on the inD snippet provided by the ika
+1. Reasoning on the VVMethods Functional Use Case 2.3
+2. Reasoning on the inD snippet provided by the ika at the RWTH Aachen
 
 ## Getting started
 
