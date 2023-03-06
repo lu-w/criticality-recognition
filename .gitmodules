@@ -13,3 +13,6 @@
 [submodule "omega2auto"]
 	path = omega2auto
 	url = https://github.com/lu-w/omega2auto.git
+[submodule "owlready2-augmentator"]
+	path = owlready2-augmentator
+	url = https://github.com/lu-w/owlready2-augmentator.git
