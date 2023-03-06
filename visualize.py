@@ -6,7 +6,7 @@ import tempfile
 import owlready2
 
 from pyauto import auto
-from pyauto.auto_visualizer import auto_visualizer
+from pyauto import visualizer
 
 
 # Instantiate the parser
@@ -60,7 +60,7 @@ cps = phenomena_extraction.phenomena_scenario(world)
 tmp_dir = tempfile.gettempdir()
 if not args.no_visualization:
     logger.info("Creating visualization for scenario")
-    tmp_dir = auto_visualizer.visualize_scenario(world, cps)
+    tmp_dir = visualizer.visualize_scenario(world, cps)
 
 if args.cps != "none":
     # Print CPs
