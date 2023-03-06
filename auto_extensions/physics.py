@@ -6,7 +6,6 @@ import math
 import numpy
 from sympy import geometry
 from shapely import wkt
-from shapely.geometry import Point, Polygon, LineString
 
 _INTERSECTING_PATH_THRESHOLD = 8   # s, the time interval in which future intersecting paths shall be detected
 _INTERSECTING_PATH_MAX_PET = 3     # s, the time interval in which future intersecting paths shall be detected

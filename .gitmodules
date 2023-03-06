@@ -7,3 +7,6 @@
 [submodule "auto/ontology"]
 	path = auto/ontology
 	url = https://github.com/lu-w/auto.git
+[submodule "pyauto"]
+	path = pyauto
+	url = https://github.com/lu-w/pyauto.git

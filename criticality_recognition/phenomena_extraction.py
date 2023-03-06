@@ -2,7 +2,7 @@ import logging
 import owlready2
 import tqdm
 
-import auto.auto
+from pyauto import auto
 
 logger = logging.getLogger(__name__)
 
@@ -32,7 +32,7 @@ class Criticality_Phenomenon:
         self.cp = cp
         self.cp_cls = cp_cls
         self.time = 0
-        ac = auto.auto.get_ontology(auto.auto.Ontology.Act, self.cp.namespace.world)
+        ac = auto.get_ontology(auto.Ontology.Act, self.cp.namespace.world)
         # Subjects
         if len(self.cp_cls.subject_extraction_code) > 0:
             try:
@@ -176,8 +176,8 @@ def phenomena_scenario(scenario: list or owlready2.World) -> list:
     cps = []
     if type(scenario) == list:
         for scene in scenario:
-            tm = auto.auto.get_ontology(auto.auto.Ontology.Traffic_Model, scene)
-            cp_ont = auto.auto.get_ontology(auto.auto.Ontology.Criticality_Phenomena, scene)
+            tm = auto.get_ontology(auto.Ontology.Traffic_Model, scene)
+            cp_ont = auto.get_ontology(auto.Ontology.Criticality_Phenomena, scene)
             scenes = list(tm.search(type=tm.Scene))
             if len(scenes) > 0:
                 for scene_cp in scenario.search(type=cp_ont.Criticality_Phenomenon):
@@ -187,10 +187,10 @@ def phenomena_scenario(scenario: list or owlready2.World) -> list:
                 raise ValueError("No scenes found in scene world " + str(scene))
 
     elif type(scenario) == owlready2.World:
-        tm = auto.auto.get_ontology(auto.auto.Ontology.Traffic_Model, scenario)
-        ac = auto.auto.get_ontology(auto.auto.Ontology.Act, scenario)
-        ti = auto.auto.get_ontology(auto.auto.Ontology.Time, scenario)
-        cp_ont = auto.auto.get_ontology(auto.auto.Ontology.Criticality_Phenomena, scenario)
+        tm = auto.get_ontology(auto.Ontology.Traffic_Model, scenario)
+        ac = auto.get_ontology(auto.Ontology.Act, scenario)
+        ti = auto.get_ontology(auto.Ontology.Time, scenario)
+        cp_ont = auto.get_ontology(auto.Ontology.Criticality_Phenomena, scenario)
         scenarios = list(scenario.search(type=tm.Scenario))
         if len(scenarios) > 0:
             if logger.level == logging.DEBUG:
@@ -248,7 +248,7 @@ def list_cps(cps: list, output_format="natural", world=None, print_non_visualiza
     output = ""
     scene_cps = []
     if print_non_visualizable_info and world:
-        tm = auto.auto.get_ontology(auto.auto.Ontology.Traffic_Model, world)
+        tm = auto.get_ontology(auto.Ontology.Traffic_Model, world)
         scenes = list(filter(lambda x: tm.Scene in x.is_a, world.search(type=tm.Scenario)[0].has_traffic_model))
         for scene in scenes:
             scene_cps += [cp for cp in cps if cp.is_representable_in_scene(scene)]
@@ -310,13 +310,13 @@ def get_most_specific_classes(list_of_individuals, caching=True):
                 res.append((i_id, _CACHED_CP_CLASSES[i]))
             else:
                 noncached_list_of_individuals.append(i)
-    relevant_iris = [auto.auto.Ontology.L1_Core.value, auto.auto.Ontology.L2_Core.value,
-                     auto.auto.Ontology.L3_Core.value, auto.auto.Ontology.L4_Core.value,
-                     auto.auto.Ontology.L5_Core.value, auto.auto.Ontology.L6_Core.value, auto.auto.Ontology.L1_DE.value,
-                     auto.auto.Ontology.L2_DE.value, auto.auto.Ontology.L3_DE.value, auto.auto.Ontology.L4_DE.value,
-                     auto.auto.Ontology.L5_DE.value, auto.auto.Ontology.L6_DE.value]
-    relevant_additional_iris = [auto.auto.Ontology.Perception.value, auto.auto.Ontology.Physics.value,
-                                auto.auto.Ontology.Act.value]
+    relevant_iris = [auto.Ontology.L1_Core.value, auto.Ontology.L2_Core.value,
+                     auto.Ontology.L3_Core.value, auto.Ontology.L4_Core.value,
+                     auto.Ontology.L5_Core.value, auto.Ontology.L6_Core.value, auto.Ontology.L1_DE.value,
+                     auto.Ontology.L2_DE.value, auto.Ontology.L3_DE.value, auto.Ontology.L4_DE.value,
+                     auto.Ontology.L5_DE.value, auto.Ontology.L6_DE.value]
+    relevant_additional_iris = [auto.Ontology.Perception.value, auto.Ontology.Physics.value,
+                                auto.Ontology.Act.value]
     for individual in noncached_list_of_individuals:
         relevant_classes = [x for x in individual.namespace.ontology.classes() if x.namespace.base_iri in relevant_iris]
         relevant_additional_classes = [x for x in individual.namespace.ontology.classes() if x.namespace.base_iri in

@@ -1,10 +1,7 @@
-import logging
 import math
 import os
-import owlready2
 import tempfile
 
-from auto import auto
 import omega_format
 from .converter_functions.utils import *
 from .converter_functions.dynamics.road_user import *

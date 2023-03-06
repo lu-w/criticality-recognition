@@ -1,7 +1,7 @@
 import owlready2
 import logging
 
-from auto import auto
+from pyauto import auto
 import omega_format
 from shapely import geometry, affinity, wkt
 

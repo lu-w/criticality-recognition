@@ -1,13 +1,6 @@
-import math
-
 from owl_augmentator.owl_augmentator import augment, augment_class, AugmentationType
 import owlready2
 from .utils import *
-
-import itertools
-from shapely.geometry import Polygon, LineString
-from shapely import wkt
-import shapely.geometry
 
 
 def register(time: owlready2.Ontology):

@@ -2,12 +2,11 @@ import argparse
 import logging
 import os
 import tempfile
-from importlib import reload
 
 import owlready2
 
-from auto import auto
-from auto.auto_visualizer import auto_visualizer
+from pyauto import auto
+from pyauto.auto_visualizer import auto_visualizer
 
 
 # Instantiate the parser

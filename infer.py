@@ -1,12 +1,11 @@
 import argparse
 import logging
 
-import matplotlib
 import owlready2
 import os
 import psutil
 
-import auto.auto
+from pyauto import auto
 from criticality_recognition import criticality_recognition, phenomena_extraction
 from omega_converter import omega_to_auto
 from inputs import example_fuc_2_3
@@ -89,8 +88,8 @@ for i, scenario_worlds in enumerate(scenarios):
 
     # Nicer scenario name for FUC 2.3
     if args.input == "fuc23":
-        scenario.search(type=auto.auto.get_ontology(auto.auto.Ontology.Traffic_Model, scenario).Scenario)[0].\
-            identifier = "Functional Use Case 2.3"
+        scenario.search(type=auto.get_ontology(auto.Ontology.Traffic_Model, scenario).Scenario)[0].identifier = \
+            "Functional Use Case 2.3"
 
     # Printing inferences
     cps = phenomena_extraction.phenomena_scenario(scenario)

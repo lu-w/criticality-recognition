@@ -1,4 +1,3 @@
-import auto.auto
 from ..utils import *
 
 

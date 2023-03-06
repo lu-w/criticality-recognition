@@ -1,5 +1,3 @@
-import matplotlib
-import shapely.geometry
 import numpy as np
 
 from owl_augmentator.owl_augmentator import augment, augment_class, AugmentationType

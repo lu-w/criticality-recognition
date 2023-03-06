@@ -5,7 +5,7 @@ import logging
 import owlready2
 from shapely import geometry
 
-from auto import auto
+from pyauto import auto
 
 # Logging
 logger = logging.getLogger(__name__)
@@ -22,9 +22,9 @@ def get_fuc23_worlds():
     fuc_2_3_world_1 = owlready2.World()
     fuc_2_3_world_2 = owlready2.World()
     fuc_2_3_world_3 = owlready2.World()
-    auto.load_cp(folder="auto/ontology", world=fuc_2_3_world_1)
-    auto.load_cp(folder="auto/ontology", world=fuc_2_3_world_2)
-    auto.load_cp(folder="auto/ontology", world=fuc_2_3_world_3)
+    auto.load_cp(folder="pyauto/auto", world=fuc_2_3_world_1)
+    auto.load_cp(folder="pyauto/auto", world=fuc_2_3_world_2)
+    auto.load_cp(folder="pyauto/auto", world=fuc_2_3_world_3)
 
     # Shorthands
     cp_1 = auto.get_ontology(auto.Ontology.Criticality_Phenomena_Formalization, fuc_2_3_world_1)

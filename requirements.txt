@@ -7,6 +7,8 @@ sympy
 matplotlib
 matplotlib-label-lines
 mpld3
+tqdm
 screeninfo
 numpy
 ./owl_augmentator
+./pyauto

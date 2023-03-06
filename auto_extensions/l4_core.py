@@ -3,8 +3,6 @@ from owl_augmentator.owl_augmentator import augment, augment_class, concepts, Au
 import owlready2
 from shapely import wkt
 from shapely.geometry import Polygon
-from matplotlib import pyplot as plt
-import matplotlib
 
 from .utils import *
 

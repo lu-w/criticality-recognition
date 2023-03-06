@@ -1,7 +1,7 @@
 import logging
 import owlready2
 
-from auto import auto
+from pyauto import auto
 
 logger = logging.getLogger(__name__)
 
