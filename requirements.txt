@@ -12,3 +12,4 @@ screeninfo
 numpy
 ./owl_augmentator
 ./pyauto
+./omega2auto

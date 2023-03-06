@@ -10,3 +10,6 @@
 [submodule "pyauto"]
 	path = pyauto
 	url = https://github.com/lu-w/pyauto.git
+[submodule "omega2auto"]
+	path = omega2auto
+	url = https://github.com/lu-w/omega2auto.git

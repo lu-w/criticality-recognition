@@ -7,7 +7,7 @@ import psutil
 
 from pyauto import auto
 from criticality_recognition import criticality_recognition, phenomena_extraction
-from omega_converter import omega_to_auto
+from omega2auto import omega_to_auto
 from inputs import example_fuc_2_3
 
 # Instantiate the parser
