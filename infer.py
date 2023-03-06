@@ -7,7 +7,7 @@ import psutil
 
 from pyauto import auto
 from criticality_recognition import criticality_recognition, phenomena_extraction
-from omega2auto import omega_to_auto
+import omega2auto
 from inputs import example_fuc_2_3
 
 # Instantiate the parser
@@ -70,7 +70,7 @@ logger.info("Pellet will use a maximum of " + str(owlready2.reasoning.JAVA_MEMOR
 
 # Reading inputs
 if args.input.endswith(".hdf5"):
-    scenarios = omega_to_auto.convert(os.path.abspath(args.input), args.auto, cp=True, scenarios=args.scenarios,
+    scenarios = omega2auto.convert(os.path.abspath(args.input), args.auto, cp=True, scenarios=args.scenarios,
                                       sampling_rate=args.hertz, start_offset=args.start, end_offset=args.end)
 elif args.input == "fuc23":
     scenarios = [example_fuc_2_3.get_fuc23_worlds()]
