@@ -1,4 +1,4 @@
-from owl_augmentator import augment, augment_class, concepts, AugmentationType
+from owl_augmentator.owl_augmentator import augment, augment_class, concepts, AugmentationType
 import owlready2
 from shapely import wkt
 from .utils import *
