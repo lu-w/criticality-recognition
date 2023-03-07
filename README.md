@@ -12,7 +12,7 @@ First, initialize all submodules: `git submodule update --init --recursive`.
 
 ### Install dependencies 
 
-For inD reasoning, we need the `omega_format` package as provided by the corresponding submodule in this git (`oemga2auto/omega_format`). 
+For inD reasoning, we need the `omega_format` package as provided by the corresponding submodule in this git (`omega2auto/omega_format`). 
 The installation instructions for `omega_format` are given in `omega2auto/omega_format/README.md`. 
 
 Once `omega_format` is installed, continue with the dependencies for this package as listed in `requirements.txt`. 
