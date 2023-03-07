@@ -6,8 +6,7 @@ import tempfile
 import owlready2
 
 from pyauto import auto
-from pyauto import visualizer
-
+from pyauto.visualizer import visualizer
 
 # Instantiate the parser
 from criticality_recognition import phenomena_extraction
