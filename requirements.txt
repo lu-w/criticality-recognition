@@ -10,6 +10,6 @@ mpld3
 tqdm
 screeninfo
 numpy
-./owl_augmentator
+./owlready2_augmentator
 ./pyauto
 ./omega2auto
