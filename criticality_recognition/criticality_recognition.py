@@ -5,7 +5,7 @@ import re
 import timeit
 import owlready2
 from pyauto import auto
-import owl_augmentator
+import owlready2_augmentator
 from auto_extensions import time, perception, physics, l1_core, l1_de, l4_core
 from . import world_merger
 from . import temporal_reduction

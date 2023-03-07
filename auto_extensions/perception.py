@@ -1,6 +1,6 @@
 import numpy as np
 
-from owl_augmentator.owl_augmentator import augment, augment_class, AugmentationType
+from owlready2_augmentator import augment, augment_class, AugmentationType
 import owlready2
 from .utils import *
 
