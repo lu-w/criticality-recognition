@@ -224,7 +224,7 @@ def _reason(world: owlready2.World, aug_undos=None, pellet_output=False) -> list
                      " triples")
         t3 = timeit.default_timer()
 
-        augmentation, new_individuals = owl_augmentator.do_augmentation(ph, pe, l4core, ti, l1core, l1de)
+        augmentation, new_individuals = owlready2_augmentator.do_augmentation(ph, pe, l4core, ti, l1core, l1de)
 
         # Remove previously re-added individuals since they have now been used in augmentations and can safely be
         # deleted
