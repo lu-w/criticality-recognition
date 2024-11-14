@@ -18,11 +18,21 @@ The installation instructions for `omega_format` are given in `omega2auto/omega_
 Once `omega_format` is installed, continue with the dependencies for this package as listed in `requirements.txt`. 
 Install them by `pip install -r requirements.txt`.
 
-#### Patching `owlready2` <0.36
+### Patching
+
+#### Reasoning
+
+Since `owlready2` uses the Jena loader by default, which has shown to lead to faulty behavior of Pellet on A.U.T.O. (the ontology used in our examples), we first need to patch `owlready2` to use the OWLAPIv3 loader by:
+
+`patch /path/to/your/local/owlready2/driver.py < patches/owlready2_reasoning.patch`
+
+#### Driver
+
+##### Patching `owlready2` <0.36
 
 If you use `owlready2` < 0.36, there exists a bug which can simply be patched by changing one line in your local copy of `owlready2` (see corresponding [pull request](https://bitbucket.org/jibalamy/owlready2/pull-requests/12)).
 
-#### Patching `owlready2` 0.36
+##### Patching `owlready2` 0.36
 
 `owlready2` 0.36 has an issue handling URI prefixes of A.U.T.O. ('http://purl.org/auto/#'). 
 This manifests when saving the A-Box to an OWL file.

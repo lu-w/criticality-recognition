@@ -1,0 +1,11 @@
+--- /home/lwesthofen/anaconda3/envs/crit_paper/lib/python3.10/site-packages/owlready2/reasoning.py	2024-11-13 08:52:40.361943227 +0100
++++ /home/lwesthofen/anaconda3/envs/crit/lib/python3.10/site-packages/owlready2/reasoning.py	2024-11-12 12:58:26.783540781 +0100
+@@ -246,7 +246,7 @@
+     tmp.close()
+ 
+     # Use Jena for loading because OWLAPI is bugged with NTriples.
+-    command = [owlready2.JAVA_EXE, "-Xmx%sM" % JAVA_MEMORY, "-cp", _PELLET_CLASSPATH, "pellet.Pellet", "realize", "--loader", "OWLAPIv3", "--input-format", "N-Triples", "--ignore-imports", tmp.name]
++    command = [owlready2.JAVA_EXE, "-Xmx%sM" % JAVA_MEMORY, "-cp", _PELLET_CLASSPATH, "pellet.Pellet", "realize", "--loader", "Jena", "--input-format", "N-Triples", "--ignore-imports", tmp.name]
+     if infer_property_values:      command.insert(-2, "--infer-prop-values")
+     if infer_data_property_values: command.insert(-2, "--infer-data-prop-values")
+ 
